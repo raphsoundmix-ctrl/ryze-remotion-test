@@ -1,0 +1,38 @@
+{
+  "model": "claude-opus-5-5",
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(npm run *)", "Bash(npm install*)", "Bash(npm i *)", "Bash(npm ci)", "Bash(npm view *)", "Bash(npm ls*)",
+      "Bash(npx tsx *)", "Bash(npx tsc *)", "Bash(npx remotion *)", "Bash(npx next *)", "Bash(npx playwright *)", "Bash(npx vercel *)",
+      "Bash(node *)",
+      "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)", "Bash(git show*)", "Bash(git add *)", "Bash(git commit *)",
+      "Bash(git checkout *)", "Bash(git switch *)", "Bash(git branch*)", "Bash(git merge *)", "Bash(git rebase *)", "Bash(git worktree *)",
+      "Bash(git remote *)", "Bash(git push origin *)", "Bash(git push -u origin *)", "Bash(git stash*)", "Bash(git restore *)", "Bash(git revert *)", "Bash(git tag *)",
+      "Bash(ls*)", "Bash(mkdir *)", "Bash(cp *)", "Bash(mv *)", "Bash(rm *)", "Bash(unzip *)", "Bash(grep *)",
+      "Bash(ffmpeg *)", "Bash(ffprobe *)",
+      "Bash(gh auth status*)", "Bash(gh repo view*)", "Bash(gh repo set-default*)",
+      "Bash(vercel *)", "Bash(curl *)",
+      "WebSearch", "WebFetch(domain:remotion.dev)", "WebFetch(domain:www.remotion.dev)", "WebFetch(domain:code.claude.com)", "WebFetch(domain:vercel.com)", "WebFetch(domain:nextjs.org)"
+    ],
+    "deny": [
+      "Read(./.env)", "Read(./.env.local)", "Read(./.env.production)", "Read(./.env.*.local)",
+      "Bash(git push --force*)", "Bash(git push -f*)", "Bash(git reset --hard*)", "Bash(git clean -f*)",
+      "Bash(npm publish*)",
+      "Bash(vercel env add*)", "Bash(vercel env rm*)", "Bash(vercel remove*)", "Bash(vercel project rm*)", "Bash(vercel domains*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      { "matcher": "Bash", "hooks": [ { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.mjs\"" } ] },
+      { "matcher": "Write|Edit", "hooks": [ { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.mjs\"" } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-gate.mjs\"" } ] }
+    ]
+  },
+  "env": {
+    "CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS": "4",
+    "CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH": "2"
+  }
+}

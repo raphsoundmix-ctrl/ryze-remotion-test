@@ -7,3 +7,9 @@ next-env.d.ts
 *.tsbuildinfo
 .cache
 .whisper
+.vercel
+inbox/*
+!inbox/.gitkeep
+.claude/state/*
+!.claude/state/.gitkeep
+.claude/settings.local.json
