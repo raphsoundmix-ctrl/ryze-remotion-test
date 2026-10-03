@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 description: Run exactly one phase from docs/RUNBOOK.md through the full loop (build, verify, review, QA, commit)
 argument-hint: <phase id, e.g. P3>
 ---

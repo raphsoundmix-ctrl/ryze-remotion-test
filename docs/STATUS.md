@@ -10,9 +10,10 @@ PARAMS: (filled by /autopilot: REPO_URL, VERCEL_PROJECT, BRAND, COMMIT_ASSETS, M
 | P1 contract v2 + synthetic pack | core ∥ media | TODO | | |
 | P2 ingest | media | TODO | | |
 | P3 template v2 | remotion-motion | TODO | | |
-| P4 variants + preflight + render | core | TODO | | |
+| P4a variants + preflight | core | TODO | | |
+| P4b batch render (needs P3) | core | TODO | | |
 | P5 Playground UI | ui-engineer | TODO | | |
-| P6 integration QA | orchestrator | TODO | | |
+| P6 integration QA + v1 cleanup | orchestrator | TODO | | |
 | P7 ship (GitHub + Vercel) | release-engineer | TODO | | |
 | P8 proof pack | docs-writer | TODO | | |
 

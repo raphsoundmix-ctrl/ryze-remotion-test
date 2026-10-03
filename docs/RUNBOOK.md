@@ -7,7 +7,7 @@ Labels: [CONFIRMED] checked by a tool/doc | [INFERENCE] | [ASSUMPTION] verify be
 
 1. Распакуй архив, открой терминал в папке, `npm install`.
 2. **Только ты** (один раз): `gh auth login` (или свои git-credentials) и `vercel login`. Создай **пустой публичный** репозиторий на GitHub, скопируй URL. Токены в чат не вставлять.
-3. `claude` → проверь `/model` = Opus 5.5 (в `.claude/settings.json` уже указана) → вставь стартовый промпт из §12.
+3. `claude` → проверь `/model` = Opus 5.5 (в `.claude/settings.json` уже указана) → отправь **одной строкой** команду из §12 (слэш-команда работает, только если она первая в сообщении).
 4. Агенты работают на **синтетическом наборе**, пока нет твоего. Когда `ryze-asset-pack.zip` готов, положи его в `inbox/`: агенты подхватят на ближайшей проверке (§10).
 5. Остановится сам в двух случаях: `RUN_STATE: DONE` или `docs/BLOCKER.md` (там написано, что сделать тебе). Остановить вручную: `/pause`. Статус: `/status`.
 6. Расход: каждый субагент считается в твой лимит тарифа. В настройках стоит максимум 4 параллельных (оркестратор держит 3). `--dangerously-skip-permissions` не нужен: права заданы списком; включай его только в изолированной VM/контейнере.
@@ -38,6 +38,8 @@ Deliver a public GitHub repo and a live Vercel URL for a Remotion **auto-montage
 5. Harness files `.claude/settings.json` and `.claude/hooks/**` are user-owned. If a change is needed, write it into docs/BLOCKER.md.
 6. Evidence over claims: never write "OOM-safe", "100 unique ads", "perfect sync", "production-ready", "runs on Lambda". Numbers only from `out/manifest.csv` or verify output.
 7. Node-only code (fs, network, ffmpeg) never imported from `src/remotion/**` or `src/components/**`.
+8. **Only the orchestrator** edits `package.json` / `package-lock.json` and runs `npm install|uninstall`. Agents return dependency requests (`name@exact-version: reason`, npm script lines). Two agents running npm in one checkout corrupts the lockfile.
+9. **Green at every commit:** v1 (current) and v2 (new contract) live side by side until P6 removes v1. Never change a contract in a way that breaks files another phase has not migrated yet.
 
 ## 3. State and truth
 
@@ -55,9 +57,10 @@ Context rule: never paste long logs into the main context. Delegate log-heavy wo
 
 | Agent | Owns (exclusive write) | Use for |
 |---|---|---|
-| `core-engineer` | `src/schema.ts`, `src/lib/{variants,timing,preflight}.ts`, `scripts/{build-variants,render-mvp,verify}.*`, `data/slots/**` | contract, variants, preflight, batch renderer, verify gate |
+| orchestrator | `package.json`, `package-lock.json`, `docs/STATUS.md`, `docs/BLOCKER.md`, merges, P1.0 sweep, P6 v1 cleanup | plan, delegate, integrate, decide |
+| `core-engineer` | `src/contract.ts` (v2), `src/schema.ts` (v1, until P6), `src/lib/{variants,timing,preflight}.ts`, `scripts/{build-variants,render-mvp,verify}.*`, `data/slots/**`, `data/variants/**` | contract, variants, preflight, batch renderer, verify gate |
 | `media-engineer` | `scripts/{make-synthetic-pack,ingest}.ts`, `src/lib/media/**`, `public/assets/**`, `public/packs/**`, `inbox/` | synthetic pack, ingest, ffmpeg, timings, slot-assets |
-| `remotion-motion` | `src/remotion/**`, `public/fonts/**`, `scripts/qa-stills.ts` | template, captions, transitions, ducking, formats |
+| `remotion-motion` | `src/remotion/**` (v2 in `src/remotion/v2/`), `public/fonts/**`, `scripts/qa-stills.ts` | template, captions, transitions, ducking, formats |
 | `ui-engineer` | `app/**`, `src/components/**`, `scripts/ui-shots.ts` | Playground, provenance panel, gallery |
 | `visual-qa` | none (read-only) | looks at PNGs, defect list |
 | `adversarial-reviewer` | none (read-only) | breaks the diff, claims audit, `VERDICT: SHIP|FIX` |
@@ -84,18 +87,20 @@ Stop only when `RUN_STATE: DONE` (all A1–A10 evidenced in STATUS.md) or a user
 ## 6. Parallelism and file ownership
 
 ```
-P1.0 legacy sweep (orchestrator)  ->  P1 (core ∥ media)  ->  P2 ingest (media) ∥ P3 template (motion) ∥ P4 variants+render (core)
-                                  ->  P5 UI (ui-engineer, after P3+P4 APIs exist)  ->  P6 integration QA  ->  P7 ship  ->  P8 docs
+P1.0 sweep (orchestrator) -> P1 contract v2 (core) ∥ synthetic pack (media)
+  -> P2 ingest (media) ∥ P3 template v2 (motion) ∥ P4a variants+preflight (core)
+  -> P4b batch render (core; needs P3's AdVariant composition)
+  -> P5 UI (ui-engineer; needs P3 + P4a) -> P6 integration QA + v1 cleanup -> P7 ship -> P8 docs
 ```
 Parallel agents never write the same file. If a change is needed in a file you do not own, return it as a request; the orchestrator routes it to the owner. For risky parallel work an agent may be spawned with `isolation: worktree` (the orchestrator merges with `git merge --no-ff`, then verifies).
 
 ## 7. Phases
 
 ### P1.0 legacy sweep (orchestrator, ~10 min)
-Remove the v0.1 live-AI code: `app/api/generate/`, `src/lib/{fal,openrouter,pipeline,mock,words}.ts`, `scripts/{generate-manifest,seed}.ts`, old `data/manifests/*`, `@fal-ai/client`. Replace `src/components/Dashboard.tsx` with a placeholder ("rebuilding"). Drop obsolete verify checks. `npm run verify` green. Commit `P1.0`.
+Remove ONLY the live-AI path: `app/api/generate/`, `src/lib/{fal,openrouter,pipeline}.ts`, `scripts/generate-manifest.ts`, the `generate` npm script, `@fal-ai/client`, and the Generate/Live panel inside `src/components/Dashboard.tsx` (keep presets, JSON editor, Player). **Keep** `src/lib/mock.ts`, `src/lib/words.ts`, `scripts/seed.ts`, `data/manifests/*` and the v1 composition: `Root.tsx`, the v1 Dashboard and `verify` still import them; they are removed in P6. `npm run verify` green. Commit `P1.0`.
 
 ### P1 contract v2 + synthetic pack (core-engineer ∥ media-engineer)
-- core: `src/schema.ts` per §8; `src/lib/timing.ts` (`sceneFrames`, `totalFrames` that subtract transition overlap); verify checks for schema (valid, invalid, id regex, slot max).
+- core: NEW `src/contract.ts` per §8 (v1 `src/schema.ts` stays untouched); v2 timing helpers `sceneFramesV2`/`totalFramesV2` (subtract transition overlap, add `CTA_HOLD_SEC`) in `src/lib/timing.ts` next to the v1 ones; verify checks for the v2 schema (valid, invalid, id regex, slot max, scene order).
 - media: `npm run make:pack` writes `inbox/synthetic-pack/` with the **exact tree of docs/ASSET_PACK.md §1**: 7 clips 9:16 5 s (ffmpeg lavfi sources: check availability with `-filters`/`-sources`; no `drawtext`), 7 VO mp3 whose "words" are tone bursts (180-420 ms, pitch varies, 90-160 ms gaps, 0.2 s lead) with `*.truth.json` of exact word times, `packshot.png` (RGBA bottle-like shape ≥ 1500 px), 2 music mp3 (25-40 s), 2 SFX wav, `pack.csv` with `provenance=synthetic`.
 - Accept: verify green; `make:pack` idempotent; every file ffprobe-valid.
 
@@ -105,29 +110,30 @@ Remove the v0.1 live-AI code: `app/api/generate/`, `src/lib/{fal,openrouter,pipe
 2. `ffprobe` every file; reject non-9:16 video (allow 1-2 % tolerance), missing audio in VO, non-alpha packshot.
 3. Video → 720×1280 (`scale=...:force_original_aspect_ratio=increase,crop=720:1280`), H.264 crf 24, yuv420p, 30 fps, audio stripped, ≤ 5.5 s, target ≤ 3 MB. Image clips allowed (Ken Burns in template).
 4. VO → lead trimmed to 0.25 s, `loudnorm=I=-16:TP=-1.5`, mp3 128k mono. Music → `loudnorm=I=-20`, ≤ 40 s. Packshot ≤ 1500 px.
-5. Word timings priority: `<slot>.words.json` → `<slot>.srt` → silence-based (`silencedetect=noise=-35dB:d=0.08`, tokens from `pack.csv` text distributed over speech segments by character weight, sentence punctuation maps to gaps). Record `timingSource` per slot.
+5. Word timings priority: `<slot>.words.json` → `<slot>.srt` (parse with `parseSrt` from `@remotion/captions`; SRT is phrase-level, split words by character weight inside each cue) → silence-based (`silencedetect=noise=-35dB:d=0.08`, tokens from `pack.csv` text distributed over speech segments by character weight, sentence punctuation maps to gaps). Record `timingSource` per slot.
 6. Slot policy: `durationSec = 0.25 lead + VO + 0.35 tail`; hook ≤ 4.0, body ≤ 9.0, cta ≤ 3.5 s, violations are FAIL.
-7. Write `public/packs/<packId>/**`, `data/slot-assets.json` (§8), `docs/INGEST_REPORT.md`.
+7. CTA visuals: if `ctas/C.mp4` exists every CTA slot uses it; otherwise CTA `videoSrcs = [brand/packshot.png]` (image clip). `pack.csv` slot `CTA` = shared by all CTA slots.
+8. Write `public/packs/<packId>/**`, `data/slot-assets.json` (§8), `docs/INGEST_REPORT.md`.
 - Accept: on the synthetic pack, timing error vs `*.truth.json` < 120 ms for every word (asserted in verify); all outputs inside the 8 MB budget; report lists OK/FAIL per file.
 - On **real** speech, silence-based timings are an estimate: set `timingSource: "silence"` and have visual-qa check caption sync on rendered frames; document the limit in README. Optional `--whisper` path via `@remotion/install-whisper-cpp@4.0.532` only if it installs cleanly [ASSUMPTION].
 
 ### P3 template v2 (remotion-motion)
-Composition `AIVideo` reads a manifest (§8). Required behavior:
+NEW composition `AdVariant` in `src/remotion/v2/`, registered in `Root.tsx` NEXT TO the v1 `AIVideo` (removed in P6). Reads a v2 manifest (§8). Required behavior:
 - `@remotion/transitions` `TransitionSeries` hook→body→cta, 8-frame transitions; each scene owns its VO; scene tail (0.35 s) ≥ transition so speech never overlaps (verify asserts no VO word windows overlap across scenes).
 - Body with 2 clips: cut at the word boundary nearest 50 % of the body, 6-frame punch-in at the cut. Image clips: Ken Burns.
-- Captions: `@remotion/captions` pages (≈ 3 words), active word accent. **Spacing fix:** gap must exceed active-scale growth plus stroke; use scale ≤ 1.08, stroke 6 px, `marginInline` ≥ 0.3 em, never rely on flex `gap` alone. Safe zone: y 55-68 %, central 80 % width. Style `hormozi` (bold caps) vs `clean` (pill).
-- Hook overlay 0-3 s from `onScreen`; CTA end card: packshot spring-in + brand + CTA text + 1 s hold.
+- Captions: `createTikTokStyleCaptions` from `@remotion/captions` (pages are grouped by time: start with `combineTokensWithinMilliseconds` ≈ 900 and tune until pages hold 2-4 words), active word accent. **Spacing fix:** gap must exceed active-scale growth plus stroke; use scale ≤ 1.08, stroke 6 px, `marginInline` ≥ 0.3 em, never rely on flex `gap` alone. Safe zone: y 55-68 %, central 80 % width. Style `hormozi` (bold caps) vs `clean` (pill).
+- Hook overlay 0-3 s from `onScreen`; CTA end card: packshot spring-in + brand + CTA text, then `CTA_HOLD_SEC` (1.0 s) hold that `totalFramesV2` adds outside the slot limit.
 - Music bed 0.12 volume, ducked to 0.05 while any VO word is active (6-frame ramps), fade-out last 1 s; optional SFX on cuts.
 - Fonts offline: commit Inter (OFL) woff2 into `public/fonts/`, load via `staticFile` (check `@remotion/fonts` API in installed types); **no network at render**.
 - Formats `9x16 | 1x1 | 4x5` through `calculateMetadata`; layout adapts, safe zones recomputed.
 - `npm run qa:stills` renders stills at 6 fixed frames per format for one variant (uses `REMOTION_BROWSER_EXECUTABLE` if set).
 - Accept: stills reviewed by visual-qa PASS; SSR smoke still passes.
 
-### P4 variants + preflight + render (core-engineer)
+### P4 = P4a variants + preflight (parallel with P2/P3) and P4b batch render (after P3) (core-engineer)
 - `src/lib/variants.ts` pure: `composeManifest(hook, body, cta, opts)`, `enumerateVariants(slots, axes)`; id `H1_B2_C1_hormozi`, extra axes append `_m2`, `_1x1`. Verify: 12 variants; scale simulation 5×4×5 = 100 by adding rows to in-memory slots, no code change.
-- `npm run build:variants` writes `data/manifests/*.json`.
+- `npm run build:variants` writes v2 manifests to `data/variants/*.json` (v1 seeds stay in `data/manifests/` until P6).
 - `src/lib/preflight.ts`: schema safeParse, then per scene: file exists, ffprobe duration/dimensions, audio ≤ slot max; returns structured results, never throws.
-- `scripts/render-mvp.ts`: per-file safeParse + preflight, skip invalid with reason, try/catch per render; flags `--only --limit --concurrency --parallel --browser`; browser from `--browser` or `REMOTION_BROWSER_EXECUTABLE`; concurrency ≤ CPU cores; default parallel 1; limiter ≤ 10 lines or `p-limit` only if it imports cleanly (v7 is ESM-only) [ASSUMPTION]; CSV `variant_id,hook_id,body_id,cta_id,format,file,duration_sec,render_sec,rss_mb,status,reason,spend,ctr,hook_rate_3s,hold_rate` (last four empty, joined later on `variant_id`); exit non-zero only if nothing rendered.
+- `scripts/render-mvp.ts` (P4b, after P3): reads `data/variants/`, renders composition `AdVariant`; per-file safeParse + preflight, skip invalid with reason, try/catch per render; flags `--only --limit --concurrency --parallel --browser`; browser from `--browser` or `REMOTION_BROWSER_EXECUTABLE`; concurrency ≤ CPU cores; default parallel 1; limiter ≤ 10 lines or `p-limit` only if it imports cleanly (v7 is ESM-only) [ASSUMPTION]; CSV `variant_id,hook_id,body_id,cta_id,format,file,duration_sec,render_sec,rss_mb,status,reason,spend,ctr,hook_rate_3s,hold_rate` (last four empty, joined later on `variant_id`); exit non-zero only if nothing rendered.
 - Accept: A5 demonstrated on a temp copy (corrupt manifest, missing asset).
 
 ### P5 Playground UI (ui-engineer)
@@ -138,7 +144,8 @@ Three panels, one page, static-friendly Next app (no API routes):
 - Player is the visual anchor on desktop; responsive 360/768/1280; visible focus; keyboard operable.
 - `npm run ui:shots` (Playwright) writes PNGs per viewport and prints the **network request count during a select change**; accept 0.
 
-### P6 integration QA (orchestrator + qa agents)
+### P6 integration QA + v1 cleanup (orchestrator + qa agents)
+First remove v1: `src/schema.ts`, `src/lib/{mock,words}.ts`, `scripts/seed.ts`, `data/manifests/`, the v1 `AIVideo` composition and its components, v1 verify checks, the `seed` npm script; rename `src/contract.ts` → `src/schema.ts` only if every import is updated in the same commit. `npm run verify` green, commit `P6.0`. Then:
 Run: `build:variants`, `render -- --limit 12 --concurrency 1`, `previews`, `ui:shots`. Extract 6 frames from 3 rendered MP4s with bundled ffmpeg for visual-qa (real output, not only stills). Fix loop per §5. A7 and A5 evidence into STATUS.md. If Chrome cannot be downloaded (doctor reports `remotion.media` blocked), use `REMOTION_BROWSER_EXECUTABLE` pointing to a local Chrome/Chromium; if none exists → BLOCKER (§10).
 
 ### P7 ship (release-engineer; needs REPO_URL and logins)
@@ -150,12 +157,13 @@ README, `docs/LOOM_SCRIPT.md` (60-90 s English), `docs/EMAIL.md` (5 lines). Metr
 ## 8. Contracts
 
 ```ts
-// src/schema.ts (zod 4.5.4). FINAL_INSTRUCTIONS §4 + needed extensions: videoSrcs[] (bodies have 2 clips), pack/brand/format.
+// src/contract.ts (v2; zod 4.5.4). FINAL_INSTRUCTIONS §4 + needed extensions: videoSrcs[] (bodies have 2 clips), pack/brand/format.
 export const FPS = 30;
 export const STYLES = ["hormozi", "clean"] as const;
 export const FORMATS = { "9x16": { width: 1080, height: 1920 }, "1x1": { width: 1080, height: 1080 }, "4x5": { width: 1080, height: 1350 } } as const;
 export const SLOT_MAX_SEC = { hook: 4.0, body: 9.0, cta: 3.5 } as const;
 export const TRANSITION_FRAMES = 8;
+export const CTA_HOLD_SEC = 1.0; // end-card hold, added by totalFramesV2, NOT part of durationSec / slot limits
 
 export const WordSchema = z.object({ word: z.string().min(1), startMs: z.number().nonnegative(), endMs: z.number().positive() });
 export const SceneSchema = z.object({
@@ -198,13 +206,17 @@ Asset tree (public): `public/packs/<packId>/{hooks,bodies,ctas,music,sfx,brand}/
 | 6 | Active caption scaled ×1.12 + 8 px stroke > 26 px gap → words glued | see P3 spacing rule |
 | 7 | Rotating the placeholder background exposes black corners | no rotation; scale ≥ covers |
 | 8 | SSR smoke (`renderToString`) only proves "does not throw" | visual-qa on real stills and on frames from real MP4s is mandatory |
-| 9 | Chrome Headless Shell downloads from `remotion.media`; may be blocked | `REMOTION_BROWSER_EXECUTABLE` / `--browser`; verified that an external Chromium renders [CONFIRMED in sandbox] |
+| 9 | Chrome Headless Shell downloads from `remotion.media`; may be blocked | our scripts read `REMOTION_BROWSER_EXECUTABLE` (OUR variable, not a Remotion built-in) or `--browser` and pass `browserExecutable`; an external Chromium renders fine [CONFIRMED in sandbox] |
 | 10 | `renderMedia` concurrency > CPU cores errors | clamp to `os.cpus().length` |
 | 11 | Remotion's bundled ffmpeg 7.1 lacks `drawtext`, `sidechaincompress`; has `silencedetect`, `loudnorm`, `scale`, `crop`, `amix`, libx264/aac/libmp3lame | use `npx remotion ffmpeg|ffprobe` everywhere; ducking happens in the template |
 | 12 | npm scripts run via `sh`/cmd: no `$?`, `PIPESTATUS`, bashisms | keep scripts in Node |
 | 13 | `next build` rewrites `tsconfig.json` include | commit the result |
 | 14 | Hook/guard: `git add` and `git commit` must be separate Bash calls (secret scan reads the index) | enforced by `.claude/hooks/guard.mjs` |
 | 15 | Windows | no `unzip`/`rm -rf` assumptions in scripts, `path.join`, forward slashes in manifests |
+| 16 | Claude Code on Windows has a separate `PowerShell` tool; a Bash-only deny/hook can be bypassed through it | the guard hook matches `Bash|PowerShell`; never try to route around a block |
+| 17 | Slash commands are skills: Claude itself could invoke them | `/autopilot`, `/phase`, `/pause` set `disable-model-invocation: true` |
+| 18 | `@remotion/transitions` presentations live in subpaths (e.g. `@remotion/transitions/fade`); root exports `TransitionSeries`, `linearTiming`, `springTiming` | import from the documented subpath, check installed types |
+| 19 | `hooks:test` proves the hook SCRIPTS, not that Claude Code fires them | `/autopilot` runs a wiring probe (`echo $HOOK_PROBE_TOKEN` must be BLOCKED) |
 
 ## 10. Blockers: only the user can resolve these
 
@@ -225,9 +237,9 @@ Format (≤ 8 lines): `BLOCKER <id>: <one sentence>` / `YOU DO: <exact commands>
 
 **Params** (from `/autopilot`, stored in STATUS.md `PARAMS`): `REPO_URL`, `VERCEL_PROJECT` (default `ryze-video-engine`), `BRAND` (default NORDA), `COMMIT_ASSETS` (default `yes`).
 
-1. Hygiene: `.gitignore` covers `node_modules .next out .env* !.env.example .vercel .cache .whisper inbox/* !inbox/.gitkeep .claude/state .claude/settings.local.json *.tsbuildinfo`. Add MIT `LICENSE` for our code; README notes that Remotion has its own license terms [CONFIRMED: free for individuals and companies ≤ 3 people; company license from $100/month Automators] .
+1. Hygiene: `.gitignore` covers `node_modules .next out .env* !.env.example .vercel .cache .whisper inbox/* !inbox/.gitkeep .claude/state .claude/settings.local.json *.tsbuildinfo`. Add MIT `LICENSE` for our code; README notes that Remotion has its own license [CONFIRMED on remotion.dev pricing: free for individuals and companies up to 3 people; Company License for 4+: "Automators" $0.01/render with a $100/month minimum, "Creators" $25/seat/month].
 2. Scan: whole tree and `git log -p` for secret patterns (the guard's list). Any hit → remove, rewrite is NOT allowed (no force push): if a secret is in history, write BLOCKER B5 (user decides to recreate the repo).
-3. Remote: `git remote add origin <REPO_URL>` (or `set-url`); confirm it is empty and public with `gh repo view <REPO_URL> --json visibility,isEmpty` when `gh` exists. `git push -u origin main` (never force).
+3. Remote: `git remote add origin <REPO_URL>` (or `set-url`); confirm it is empty with `git ls-remote --heads <REPO_URL>` (no output = empty) and public by opening it without auth (`curl -s -o /dev/null -w "%{http_code}" <REPO_URL>` = 200) or `gh repo view <REPO_URL> --json visibility` when `gh` exists. `git push -u origin main` (never force).
 4. Vercel: `vercel whoami` (else B2). `vercel link --yes --project <VERCEL_PROJECT>` creates the project if missing [CONFIRMED in Vercel docs]. Try `vercel git connect` so pushes auto-deploy; if it fails (GitHub app not installed), continue with CLI deploys and note it in STATUS.md. Deploy: `vercel deploy --prod --yes`. No env vars, no secrets.
 5. Smoke: `curl -sS -o /dev/null -w "%{http_code}"` on the production URL = 200; fetch the HTML and assert the Playground title string; run `ui:shots` against the production URL if Playwright is available. Record the URL in STATUS.md.
 6. Size budget: `public/` ≤ ~45 MB total, each file ≤ 8 MB [ASSUMPTION: conservative; check Vercel limits if a deploy is rejected]. `COMMIT_ASSETS=no`: keep real pack files out of git (only synthetic in repo), deploy with the CLI from the local tree.
@@ -236,8 +248,8 @@ Format (≤ 8 lines): `BLOCKER <id>: <one sentence>` / `YOU DO: <exact commands>
 
 ## 12. Start prompt (paste into Claude Code in the repo root)
 
+A slash command only runs when it is the **first thing** in the message, so send exactly this one line (the command itself makes Claude read CLAUDE.md, this runbook and STATUS.md):
 ```
-Read CLAUDE.md and docs/RUNBOOK.md completely. Then run:
 /autopilot REPO_URL=https://github.com/<user>/<empty-public-repo> VERCEL_PROJECT=ryze-video-engine BRAND=NORDA COMMIT_ASSETS=yes MAX_BLOCKS=30
 ```
 
@@ -252,4 +264,5 @@ Read CLAUDE.md and docs/RUNBOOK.md completely. Then run:
 | Two agents need the same file | the owner makes the change; the other sends a request via the orchestrator |
 | Render slow/OOM | `--concurrency 1 --parallel 1`; lower resolution only for QA, never for final |
 | Quota pressure | `/pause`; resume later with `/autopilot` (STATUS.md is the memory) |
+| Wiring probe `echo $HOOK_PROBE_TOKEN` was NOT blocked | hooks are not firing (Git Bash missing? Claude Code too old?): BLOCKER B6, do not continue without the guard |
 | First run of the Stop hook | [EXPERIMENT] confirm it continues once and the counter in `.claude/state/autopilot` increments; if it does not, tell the user and work manually per phase with `/phase Pn` |

@@ -1,6 +1,6 @@
 # Ryze Video Engine: rules (auto-loaded every session)
 
-Model: Opus 5.5. First action of every session: read `docs/RUNBOOK.md` fully, then `docs/STATUS.md`. Autopilot: `/autopilot REPO_URL=...`; `/status`, `/phase Pn`, `/pause`.
+Model: Opus 5.5. Start: send `/autopilot REPO_URL=...` as the FIRST thing in a message (slash commands only run at the start). First action of every session: read `docs/RUNBOOK.md` fully, then `docs/STATUS.md`. Autopilot: `/autopilot REPO_URL=...`; `/status`, `/phase Pn`, `/pause`.
 Stack: Next 16, Remotion **4.0.532** (all `@remotion/*` exact), zod **4.5.4** exact, TypeScript 7 (`"types":["node"]`), tsx. Scripts in Node, no bashisms. Never `cd` out of the repo root.
 Commands: `npm run verify` (gate) | `hooks:test` | `doctor` | `dev` | `build`. Defined by the phases: `make:pack ingest build:variants render qa:stills previews ui:shots`.
 
@@ -12,4 +12,6 @@ Commands: `npm run verify` (gate) | `hooks:test` | `doctor` | `dev` | `build`. D
 5. **Honesty:** synthetic assets are labeled synthetic. No claim without a measurement (FINAL_INSTRUCTIONS §15). Labels: [CONFIRMED] [INFERENCE] [ASSUMPTION] [EXPERIMENT].
 6. **Token economy:** do not read `node_modules/ .next/ out/ package-lock.json`. Delegate log-heavy work (render, ingest) to subagents; keep only their summaries. Grep or `view_range`, diffs not rewrites.
 7. **Remotion:** local assets via `staticFile()`; `Loop` for short clips; durations from the manifest; no network at render; node-only code never imported from `src/remotion/**` or `src/components/**`.
-8. Chrome download host may be blocked: use `REMOTION_BROWSER_EXECUTABLE` / `--browser`.
+8. Chrome download host may be blocked: our scripts read `REMOTION_BROWSER_EXECUTABLE` (our variable) / `--browser`.
+9. **Only you (orchestrator)** edit `package.json`/`package-lock.json` and run `npm install`; agents return dependency requests.
+10. **Green at every commit:** contract v2 (`src/contract.ts`, composition `AdVariant`, `data/variants/`) lives next to v1 until P6 removes v1.
