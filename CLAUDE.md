@@ -8,7 +8,7 @@ Work plan: `PLAN.md`. Read ONLY the section of the current phase.
 1. **Token economy.** No exploring. Touch only files named in the phase. Never read `node_modules/ .next/ out/ package-lock.json`. Use grep or `view_range`. Edit with diffs; do not rewrite files >100 lines.
 2. **Gate.** Every phase ends with `npm run verify` green, then `git commit -m "P<n>: ..."`. Same failure twice → STOP and report. Do not loop.
 3. **Secrets.** Only `.env.local`. Never print, log, commit or put a key in client code. Keys in `.env.example` stay empty.
-4. **Free-first.** Default `PROFILE=free`. Paid APIs (fal, paid LLMs) only when `PROFILE=paid` AND the user confirmed the spend in chat.
+4. **Offline asset pack.** The demo makes NO runtime AI/API calls. Inputs come from the asset pack (docs/ASSET_PACK.md). Paid/live adapters are documentation only.
 5. **Node-only code** (`src/providers/**`, `src/lib/assets.ts`, anything using fs/network) must never be imported from `src/remotion/**` or `src/components/**`.
 6. **Remotion.** Local assets via `staticFile()`; remote via URL. Use `Html5Audio`, `OffthreadVideo`, `Loop` from `"remotion"`. Do not use `getAudioDurationInSeconds` (deprecated). Duration comes from the manifest (`src/lib/timing.ts`).
 7. **Claims need measurements.** Numbers in README/email come only from `out/manifest.csv` or verify output. Label non-trivial claims `[CONFIRMED] [INFERENCE] [ASSUMPTION] [EXPERIMENT]`.
