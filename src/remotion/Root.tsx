@@ -1,28 +1,29 @@
 import React from "react";
 import { Composition, type CalculateMetadataFunction } from "remotion";
-import { FPS, HEIGHT, ManifestSchema, WIDTH, type Manifest } from "../schema";
+import { FORMATS, FPS, ManifestSchema, SlotAssetsSchema, type Manifest } from "../contract";
 import { totalFrames } from "../lib/timing";
-import { SEED_PRESETS, buildMockManifest } from "../lib/mock";
-import { AIVideoTemplate } from "./AIVideoTemplate";
+import { composeManifest, DEFAULT_AXES } from "../lib/variants";
+import slotAssets from "../../data/slot-assets.json";
+import { AdVariant } from "./AdVariant";
 
-const p = SEED_PRESETS[0];
-const defaultProps: Manifest = buildMockManifest({
-  idea: p.idea, variantId: p.variantId, captionStyle: p.captionStyle, look: p.look, script: p.script,
-});
+const assets = SlotAssetsSchema.parse(slotAssets);
+const defaultProps: Manifest = composeManifest(assets, "H1", "B1", "C1", { ...DEFAULT_AXES });
 
-// Length is data-driven: whatever manifest comes in decides the duration.
+// Size and length are data-driven: the manifest decides format and duration.
 const calculateMetadata: CalculateMetadataFunction<Manifest> = ({ props }) => ({
   durationInFrames: totalFrames(props),
+  width: FORMATS[props.format].width,
+  height: FORMATS[props.format].height,
 });
 
 export const RemotionRoot: React.FC = () => (
   <Composition
-    id="AIVideo"
-    component={AIVideoTemplate}
+    id="AdVariant"
+    component={AdVariant}
     schema={ManifestSchema}
     defaultProps={defaultProps}
-    width={WIDTH}
-    height={HEIGHT}
+    width={FORMATS[defaultProps.format].width}
+    height={FORMATS[defaultProps.format].height}
     fps={FPS}
     durationInFrames={totalFrames(defaultProps)}
     calculateMetadata={calculateMetadata}

@@ -1,74 +1,87 @@
 import React, { useMemo } from "react";
+import { createTikTokStyleCaptions, type Caption } from "@remotion/captions";
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
-import type { CaptionStyle, Word } from "../../schema";
+import type { Format, Style, Word } from "../../contract";
+import { FONT_STACK, LAYOUT, STYLE_TOKENS } from "../theme";
 
-const CHUNK = 3; // words on screen at once
+const COMBINE_MS = 650; // pages are grouped by time; tuned so pages hold 2-4 words at conversational pace
+const ACTIVE_SCALE = 1.08; // keep small: scale growth + stroke must stay inside the word margin
 
-function chunkWords(words: Word[]): Word[][] {
-  const out: Word[][] = [];
-  for (let i = 0; i < words.length; i += CHUNK) out.push(words.slice(i, i + CHUNK));
-  return out;
-}
+export const toCaptions = (words: Word[]): Caption[] =>
+  words.map((w, i) => ({
+    text: i === 0 ? w.word : ` ${w.word}`, // leading space = word boundary for createTikTokStyleCaptions
+    startMs: w.startMs,
+    endMs: w.endMs,
+    timestampMs: (w.startMs + w.endMs) / 2,
+    confidence: 1,
+  }));
 
-/** Word-synced captions. `hormozi` = bold caps + active-word pop; `clean` = sentence-case pill. */
-export const Captions: React.FC<{ words: Word[]; style: CaptionStyle; accent: string }> = ({ words, style, accent }) => {
+/** Word-synced captions for one scene (scene-local time). */
+export const Captions: React.FC<{ words: Word[]; style: Style; format: Format }> = ({ words, style, format }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const chunks = useMemo(() => chunkWords(words), [words]);
-  const tMs = (frame / fps) * 1000;
+  const { fps, width, height } = useVideoConfig();
+  const pages = useMemo(
+    () => createTikTokStyleCaptions({ captions: toCaptions(words), combineTokensWithinMilliseconds: COMBINE_MS }).pages,
+    [words],
+  );
+  const t = (frame / fps) * 1000;
+  const page = pages.find((p, i) => t >= p.startMs && t < (pages[i + 1]?.startMs ?? p.startMs + p.durationMs + 300));
+  if (!page) return null;
 
-  let idx = -1;
-  for (let i = 0; i < chunks.length; i++) if (chunks[i][0].startMs <= tMs) idx = i;
-  if (idx < 0) return null;
-
-  const chunk = chunks[idx];
-  const end = chunks[idx + 1]?.[0].startMs ?? chunk[chunk.length - 1].endMs + 250;
-  if (tMs >= end) return null;
-
+  const L = LAYOUT[format];
+  const tok = STYLE_TOKENS[style];
   const hormozi = style === "hormozi";
-  const activeIdx = chunk.reduce((a, w, i) => (w.startMs <= tMs ? i : a), 0);
+  const size = (hormozi ? 86 : 60) * L.type * (width / 1080);
+  const enter = spring({ frame: frame - Math.round((page.startMs / 1000) * fps), fps, config: { damping: 14, stiffness: 240 }, durationInFrames: 8 });
 
   return (
-    <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 380 }}>
+    <AbsoluteFill style={{ alignItems: "center" }}>
       <div
         style={{
+          position: "absolute",
+          top: height * L.captionCenterY,
+          transform: `translateY(-50%) scale(${interpolate(enter, [0, 1], [0.92, 1])})`,
+          width: width * L.contentWidth,
           display: "flex",
-          flexWrap: "wrap",
           justifyContent: "center",
-          gap: hormozi ? "10px 26px" : "8px 18px",
-          maxWidth: 940,
-          padding: hormozi ? 0 : "18px 30px",
-          borderRadius: 28,
-          background: hormozi ? "transparent" : "rgba(0,0,0,0.5)",
         }}
       >
-        {chunk.map((w, i) => {
-          const active = i === activeIdx;
-          const startFrame = Math.round((w.startMs / 1000) * fps);
-          const pop = spring({ frame: frame - startFrame, fps, config: { damping: 12, stiffness: 220 }, durationInFrames: 10 });
-          const scale = active ? interpolate(pop, [0, 1], [0.85, 1.12]) : 1;
-          return (
-            <span
-              key={`${w.startMs}-${i}`}
-              style={{
-                display: "inline-block",
-                transform: `scale(${scale})`,
-                fontFamily: "Inter, 'Helvetica Neue', Arial, sans-serif",
-                fontSize: hormozi ? 92 : 62,
-                fontWeight: hormozi ? 900 : 700,
-                textTransform: hormozi ? "uppercase" : "none",
-                letterSpacing: hormozi ? 1 : 0,
-                color: active ? accent : "#fff",
-                opacity: !hormozi && !active ? 0.75 : 1,
-                WebkitTextStroke: hormozi ? "8px #000" : undefined,
-                paintOrder: "stroke fill",
-                textShadow: hormozi ? "0 6px 0 rgba(0,0,0,0.6)" : undefined,
-              }}
-            >
-              {w.text}
-            </span>
-          );
-        })}
+        <div
+          style={{
+            textAlign: "center",
+            lineHeight: hormozi ? 1.12 : 1.25,
+            padding: hormozi ? 0 : `${size * 0.32}px ${size * 0.55}px`,
+            borderRadius: size * 0.5,
+            background: hormozi ? "transparent" : "rgba(10,12,16,0.72)",
+          }}
+        >
+          {page.tokens.map((tk, i) => {
+            const active = t >= tk.fromMs && t < (page.tokens[i + 1]?.fromMs ?? tk.toMs + 120); // exactly one active word
+            const pop = spring({ frame: frame - Math.round((tk.fromMs / 1000) * fps), fps, config: { damping: 12, stiffness: 260 }, durationInFrames: 6 });
+            return (
+              <span
+                key={`${tk.fromMs}-${i}`}
+                style={{
+                  display: "inline-block",
+                  marginInline: "0.16em", // two neighbours => 0.32em gap: exceeds scale growth + stroke
+                  transform: `scale(${active ? interpolate(pop, [0, 1], [1, ACTIVE_SCALE]) : 1})`,
+                  fontFamily: FONT_STACK,
+                  fontSize: size,
+                  fontWeight: hormozi ? 900 : 800,
+                  textTransform: hormozi ? "uppercase" : "none",
+                  letterSpacing: hormozi ? "0.01em" : "-0.01em",
+                  color: active ? tok.accent : tok.ink,
+                  opacity: !hormozi && !active && t < tk.fromMs ? 0.55 : 1,
+                  WebkitTextStroke: hormozi ? `${6 * (width / 1080)}px #000` : undefined,
+                  paintOrder: "stroke fill",
+                  textShadow: hormozi ? `0 ${5 * (width / 1080)}px 0 rgba(0,0,0,0.55)` : undefined,
+                }}
+              >
+                {tk.text.trim()}
+              </span>
+            );
+          })}
+        </div>
       </div>
     </AbsoluteFill>
   );

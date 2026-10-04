@@ -1,0 +1,194 @@
+{
+  "schema": 2,
+  "variantId": "H2_B1_C2",
+  "style": "hormozi",
+  "format": "9x16",
+  "brand": {
+    "name": "NORDA",
+    "packshotSrc": "packs/synthetic/brand/packshot.png"
+  },
+  "music": {
+    "id": "M1",
+    "src": "packs/synthetic/music/M1.mp3",
+    "volume": 0.12
+  },
+  "sfx": {
+    "transition": "packs/synthetic/sfx/whoosh.wav",
+    "pop": "packs/synthetic/sfx/pop.wav"
+  },
+  "pack": {
+    "id": "synthetic",
+    "provenance": "synthetic"
+  },
+  "scenes": [
+    {
+      "id": "H2",
+      "slot": "hook",
+      "text": "Yesterday's ice. Still in here.",
+      "onScreen": "YESTERDAY'S ICE. STILL HERE.",
+      "videoSrcs": [
+        "packs/synthetic/hooks/H2.mp4"
+      ],
+      "audioSrc": "packs/synthetic/hooks/H2.mp3",
+      "words": [
+        {
+          "word": "Yesterday's",
+          "startMs": 250,
+          "endMs": 805
+        },
+        {
+          "word": "ice.",
+          "startMs": 820,
+          "endMs": 1155
+        },
+        {
+          "word": "Still",
+          "startMs": 1925,
+          "endMs": 2215
+        },
+        {
+          "word": "in",
+          "startMs": 2230,
+          "endMs": 2300
+        },
+        {
+          "word": "here.",
+          "startMs": 2315,
+          "endMs": 2635
+        }
+      ],
+      "durationSec": 2.986,
+      "clipSec": 5,
+      "timingSource": "words.json"
+    },
+    {
+      "id": "B1",
+      "slot": "body",
+      "text": "Double steel walls keep drinks ice cold for twenty-four hours. Car, gym, beach. Still cold.",
+      "videoSrcs": [
+        "packs/synthetic/bodies/B1a.mp4",
+        "packs/synthetic/bodies/B1b.mp4"
+      ],
+      "audioSrc": "packs/synthetic/bodies/B1.mp3",
+      "words": [
+        {
+          "word": "Double",
+          "startMs": 250,
+          "endMs": 450
+        },
+        {
+          "word": "steel",
+          "startMs": 465,
+          "endMs": 760
+        },
+        {
+          "word": "walls",
+          "startMs": 775,
+          "endMs": 1045
+        },
+        {
+          "word": "keep",
+          "startMs": 1060,
+          "endMs": 1235
+        },
+        {
+          "word": "drinks",
+          "startMs": 1300,
+          "endMs": 1590
+        },
+        {
+          "word": "ice",
+          "startMs": 1605,
+          "endMs": 1830
+        },
+        {
+          "word": "cold",
+          "startMs": 1845,
+          "endMs": 2115
+        },
+        {
+          "word": "for",
+          "startMs": 2130,
+          "endMs": 2235
+        },
+        {
+          "word": "twenty-four",
+          "startMs": 2250,
+          "endMs": 2760
+        },
+        {
+          "word": "hours.",
+          "startMs": 2775,
+          "endMs": 3175
+        },
+        {
+          "word": "Car,",
+          "startMs": 3940,
+          "endMs": 4250
+        },
+        {
+          "word": "gym,",
+          "startMs": 4620,
+          "endMs": 4955
+        },
+        {
+          "word": "beach.",
+          "startMs": 5320,
+          "endMs": 5675
+        },
+        {
+          "word": "Still",
+          "startMs": 6435,
+          "endMs": 6760
+        },
+        {
+          "word": "cold.",
+          "startMs": 6775,
+          "endMs": 7106
+        }
+      ],
+      "durationSec": 7.456,
+      "clipSec": 5,
+      "timingSource": "words.json"
+    },
+    {
+      "id": "C2",
+      "slot": "cta",
+      "text": "Thirty-day trial. Tap the link.",
+      "videoSrcs": [
+        "packs/synthetic/brand/packshot.png"
+      ],
+      "audioSrc": "packs/synthetic/ctas/C2.mp3",
+      "words": [
+        {
+          "word": "Thirty-day",
+          "startMs": 250,
+          "endMs": 650
+        },
+        {
+          "word": "trial.",
+          "startMs": 665,
+          "endMs": 1125
+        },
+        {
+          "word": "Tap",
+          "startMs": 1885,
+          "endMs": 2090
+        },
+        {
+          "word": "the",
+          "startMs": 2150,
+          "endMs": 2225
+        },
+        {
+          "word": "link.",
+          "startMs": 2240,
+          "endMs": 2510
+        }
+      ],
+      "durationSec": 2.86,
+      "clipSec": null,
+      "timingSource": "words.json"
+    }
+  ]
+}

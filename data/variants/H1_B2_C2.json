@@ -1,0 +1,199 @@
+{
+  "schema": 2,
+  "variantId": "H1_B2_C2",
+  "style": "hormozi",
+  "format": "9x16",
+  "brand": {
+    "name": "NORDA",
+    "packshotSrc": "packs/synthetic/brand/packshot.png"
+  },
+  "music": {
+    "id": "M1",
+    "src": "packs/synthetic/music/M1.mp3",
+    "volume": 0.12
+  },
+  "sfx": {
+    "transition": "packs/synthetic/sfx/whoosh.wav",
+    "pop": "packs/synthetic/sfx/pop.wav"
+  },
+  "pack": {
+    "id": "synthetic",
+    "provenance": "synthetic"
+  },
+  "scenes": [
+    {
+      "id": "H1",
+      "slot": "hook",
+      "text": "Why is your water always warm by noon?",
+      "onScreen": "WARM WATER BY NOON?",
+      "videoSrcs": [
+        "packs/synthetic/hooks/H1.mp4"
+      ],
+      "audioSrc": "packs/synthetic/hooks/H1.mp3",
+      "words": [
+        {
+          "word": "Why",
+          "startMs": 250,
+          "endMs": 410
+        },
+        {
+          "word": "is",
+          "startMs": 425,
+          "endMs": 535
+        },
+        {
+          "word": "your",
+          "startMs": 550,
+          "endMs": 700
+        },
+        {
+          "word": "water",
+          "startMs": 715,
+          "endMs": 1015
+        },
+        {
+          "word": "always",
+          "startMs": 1030,
+          "endMs": 1295
+        },
+        {
+          "word": "warm",
+          "startMs": 1310,
+          "endMs": 1550
+        },
+        {
+          "word": "by",
+          "startMs": 1565,
+          "endMs": 1715
+        },
+        {
+          "word": "noon?",
+          "startMs": 1730,
+          "endMs": 2064
+        }
+      ],
+      "durationSec": 2.414,
+      "clipSec": 5,
+      "timingSource": "words.json"
+    },
+    {
+      "id": "B2",
+      "slot": "body",
+      "text": "Leak-proof lid. Fits every cup holder. Survives the drops. Built for real days.",
+      "videoSrcs": [
+        "packs/synthetic/bodies/B2a.mp4",
+        "packs/synthetic/bodies/B2b.mp4"
+      ],
+      "audioSrc": "packs/synthetic/bodies/B2.mp3",
+      "words": [
+        {
+          "word": "Leak-proof",
+          "startMs": 250,
+          "endMs": 655
+        },
+        {
+          "word": "lid.",
+          "startMs": 725,
+          "endMs": 990
+        },
+        {
+          "word": "Fits",
+          "startMs": 1770,
+          "endMs": 1975
+        },
+        {
+          "word": "every",
+          "startMs": 1990,
+          "endMs": 2205
+        },
+        {
+          "word": "cup",
+          "startMs": 2220,
+          "endMs": 2415
+        },
+        {
+          "word": "holder.",
+          "startMs": 2455,
+          "endMs": 2875
+        },
+        {
+          "word": "Survives",
+          "startMs": 3625,
+          "endMs": 4115
+        },
+        {
+          "word": "the",
+          "startMs": 4130,
+          "endMs": 4200
+        },
+        {
+          "word": "drops.",
+          "startMs": 4215,
+          "endMs": 4710
+        },
+        {
+          "word": "Built",
+          "startMs": 5480,
+          "endMs": 5630
+        },
+        {
+          "word": "for",
+          "startMs": 5670,
+          "endMs": 5810
+        },
+        {
+          "word": "real",
+          "startMs": 5825,
+          "endMs": 6010
+        },
+        {
+          "word": "days.",
+          "startMs": 6025,
+          "endMs": 6417
+        }
+      ],
+      "durationSec": 6.767,
+      "clipSec": 5,
+      "timingSource": "words.json"
+    },
+    {
+      "id": "C2",
+      "slot": "cta",
+      "text": "Thirty-day trial. Tap the link.",
+      "videoSrcs": [
+        "packs/synthetic/brand/packshot.png"
+      ],
+      "audioSrc": "packs/synthetic/ctas/C2.mp3",
+      "words": [
+        {
+          "word": "Thirty-day",
+          "startMs": 250,
+          "endMs": 650
+        },
+        {
+          "word": "trial.",
+          "startMs": 665,
+          "endMs": 1125
+        },
+        {
+          "word": "Tap",
+          "startMs": 1885,
+          "endMs": 2090
+        },
+        {
+          "word": "the",
+          "startMs": 2150,
+          "endMs": 2225
+        },
+        {
+          "word": "link.",
+          "startMs": 2240,
+          "endMs": 2510
+        }
+      ],
+      "durationSec": 2.86,
+      "clipSec": null,
+      "timingSource": "words.json"
+    }
+  ]
+}

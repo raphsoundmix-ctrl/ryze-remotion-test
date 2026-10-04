@@ -1,0 +1,592 @@
+{
+  "pack": {
+    "id": "synthetic",
+    "provenance": "synthetic",
+    "createdAt": "2026-10-04"
+  },
+  "brand": {
+    "name": "NORDA",
+    "packshotSrc": "packs/synthetic/brand/packshot.png"
+  },
+  "slots": {
+    "H1": {
+      "id": "H1",
+      "slot": "hook",
+      "text": "Why is your water always warm by noon?",
+      "onScreen": "WARM WATER BY NOON?",
+      "videoSrcs": [
+        "packs/synthetic/hooks/H1.mp4"
+      ],
+      "audioSrc": "packs/synthetic/hooks/H1.mp3",
+      "words": [
+        {
+          "word": "Why",
+          "startMs": 250,
+          "endMs": 410
+        },
+        {
+          "word": "is",
+          "startMs": 425,
+          "endMs": 535
+        },
+        {
+          "word": "your",
+          "startMs": 550,
+          "endMs": 700
+        },
+        {
+          "word": "water",
+          "startMs": 715,
+          "endMs": 1015
+        },
+        {
+          "word": "always",
+          "startMs": 1030,
+          "endMs": 1295
+        },
+        {
+          "word": "warm",
+          "startMs": 1310,
+          "endMs": 1550
+        },
+        {
+          "word": "by",
+          "startMs": 1565,
+          "endMs": 1715
+        },
+        {
+          "word": "noon?",
+          "startMs": 1730,
+          "endMs": 2064
+        }
+      ],
+      "durationSec": 2.414,
+      "clipSec": 5,
+      "timingSource": "words.json"
+    },
+    "H2": {
+      "id": "H2",
+      "slot": "hook",
+      "text": "Yesterday's ice. Still in here.",
+      "onScreen": "YESTERDAY'S ICE. STILL HERE.",
+      "videoSrcs": [
+        "packs/synthetic/hooks/H2.mp4"
+      ],
+      "audioSrc": "packs/synthetic/hooks/H2.mp3",
+      "words": [
+        {
+          "word": "Yesterday's",
+          "startMs": 250,
+          "endMs": 805
+        },
+        {
+          "word": "ice.",
+          "startMs": 820,
+          "endMs": 1155
+        },
+        {
+          "word": "Still",
+          "startMs": 1925,
+          "endMs": 2215
+        },
+        {
+          "word": "in",
+          "startMs": 2230,
+          "endMs": 2300
+        },
+        {
+          "word": "here.",
+          "startMs": 2315,
+          "endMs": 2635
+        }
+      ],
+      "durationSec": 2.986,
+      "clipSec": 5,
+      "timingSource": "words.json"
+    },
+    "H3": {
+      "id": "H3",
+      "slot": "hook",
+      "text": "I stopped buying bottled water. Here's why.",
+      "onScreen": "I QUIT BOTTLED WATER",
+      "videoSrcs": [
+        "packs/synthetic/hooks/H3.mp4"
+      ],
+      "audioSrc": "packs/synthetic/hooks/H3.mp3",
+      "words": [
+        {
+          "word": "I",
+          "startMs": 250,
+          "endMs": 320
+        },
+        {
+          "word": "stopped",
+          "startMs": 335,
+          "endMs": 670
+        },
+        {
+          "word": "buying",
+          "startMs": 685,
+          "endMs": 960
+        },
+        {
+          "word": "bottled",
+          "startMs": 975,
+          "endMs": 1265
+        },
+        {
+          "word": "water.",
+          "startMs": 1280,
+          "endMs": 1650
+        },
+        {
+          "word": "Here's",
+          "startMs": 2405,
+          "endMs": 2655
+        },
+        {
+          "word": "why.",
+          "startMs": 2670,
+          "endMs": 2932
+        }
+      ],
+      "durationSec": 3.282,
+      "clipSec": 5,
+      "timingSource": "words.json"
+    },
+    "B1": {
+      "id": "B1",
+      "slot": "body",
+      "text": "Double steel walls keep drinks ice cold for twenty-four hours. Car, gym, beach. Still cold.",
+      "videoSrcs": [
+        "packs/synthetic/bodies/B1a.mp4",
+        "packs/synthetic/bodies/B1b.mp4"
+      ],
+      "audioSrc": "packs/synthetic/bodies/B1.mp3",
+      "words": [
+        {
+          "word": "Double",
+          "startMs": 250,
+          "endMs": 450
+        },
+        {
+          "word": "steel",
+          "startMs": 465,
+          "endMs": 760
+        },
+        {
+          "word": "walls",
+          "startMs": 775,
+          "endMs": 1045
+        },
+        {
+          "word": "keep",
+          "startMs": 1060,
+          "endMs": 1235
+        },
+        {
+          "word": "drinks",
+          "startMs": 1300,
+          "endMs": 1590
+        },
+        {
+          "word": "ice",
+          "startMs": 1605,
+          "endMs": 1830
+        },
+        {
+          "word": "cold",
+          "startMs": 1845,
+          "endMs": 2115
+        },
+        {
+          "word": "for",
+          "startMs": 2130,
+          "endMs": 2235
+        },
+        {
+          "word": "twenty-four",
+          "startMs": 2250,
+          "endMs": 2760
+        },
+        {
+          "word": "hours.",
+          "startMs": 2775,
+          "endMs": 3175
+        },
+        {
+          "word": "Car,",
+          "startMs": 3940,
+          "endMs": 4250
+        },
+        {
+          "word": "gym,",
+          "startMs": 4620,
+          "endMs": 4955
+        },
+        {
+          "word": "beach.",
+          "startMs": 5320,
+          "endMs": 5675
+        },
+        {
+          "word": "Still",
+          "startMs": 6435,
+          "endMs": 6760
+        },
+        {
+          "word": "cold.",
+          "startMs": 6775,
+          "endMs": 7106
+        }
+      ],
+      "durationSec": 7.456,
+      "clipSec": 5,
+      "timingSource": "words.json"
+    },
+    "B2": {
+      "id": "B2",
+      "slot": "body",
+      "text": "Leak-proof lid. Fits every cup holder. Survives the drops. Built for real days.",
+      "videoSrcs": [
+        "packs/synthetic/bodies/B2a.mp4",
+        "packs/synthetic/bodies/B2b.mp4"
+      ],
+      "audioSrc": "packs/synthetic/bodies/B2.mp3",
+      "words": [
+        {
+          "word": "Leak-proof",
+          "startMs": 250,
+          "endMs": 655
+        },
+        {
+          "word": "lid.",
+          "startMs": 725,
+          "endMs": 990
+        },
+        {
+          "word": "Fits",
+          "startMs": 1770,
+          "endMs": 1975
+        },
+        {
+          "word": "every",
+          "startMs": 1990,
+          "endMs": 2205
+        },
+        {
+          "word": "cup",
+          "startMs": 2220,
+          "endMs": 2415
+        },
+        {
+          "word": "holder.",
+          "startMs": 2455,
+          "endMs": 2875
+        },
+        {
+          "word": "Survives",
+          "startMs": 3625,
+          "endMs": 4115
+        },
+        {
+          "word": "the",
+          "startMs": 4130,
+          "endMs": 4200
+        },
+        {
+          "word": "drops.",
+          "startMs": 4215,
+          "endMs": 4710
+        },
+        {
+          "word": "Built",
+          "startMs": 5480,
+          "endMs": 5630
+        },
+        {
+          "word": "for",
+          "startMs": 5670,
+          "endMs": 5810
+        },
+        {
+          "word": "real",
+          "startMs": 5825,
+          "endMs": 6010
+        },
+        {
+          "word": "days.",
+          "startMs": 6025,
+          "endMs": 6417
+        }
+      ],
+      "durationSec": 6.767,
+      "clipSec": 5,
+      "timingSource": "words.json"
+    },
+    "C1": {
+      "id": "C1",
+      "slot": "cta",
+      "text": "Get yours. Link in bio.",
+      "videoSrcs": [
+        "packs/synthetic/brand/packshot.png"
+      ],
+      "audioSrc": "packs/synthetic/ctas/C1.mp3",
+      "words": [
+        {
+          "word": "Get",
+          "startMs": 250,
+          "endMs": 385
+        },
+        {
+          "word": "yours.",
+          "startMs": 400,
+          "endMs": 845
+        },
+        {
+          "word": "Link",
+          "startMs": 1605,
+          "endMs": 1775
+        },
+        {
+          "word": "in",
+          "startMs": 1790,
+          "endMs": 1890
+        },
+        {
+          "word": "bio.",
+          "startMs": 1905,
+          "endMs": 2255
+        }
+      ],
+      "durationSec": 2.605,
+      "clipSec": null,
+      "timingSource": "words.json"
+    },
+    "C2": {
+      "id": "C2",
+      "slot": "cta",
+      "text": "Thirty-day trial. Tap the link.",
+      "videoSrcs": [
+        "packs/synthetic/brand/packshot.png"
+      ],
+      "audioSrc": "packs/synthetic/ctas/C2.mp3",
+      "words": [
+        {
+          "word": "Thirty-day",
+          "startMs": 250,
+          "endMs": 650
+        },
+        {
+          "word": "trial.",
+          "startMs": 665,
+          "endMs": 1125
+        },
+        {
+          "word": "Tap",
+          "startMs": 1885,
+          "endMs": 2090
+        },
+        {
+          "word": "the",
+          "startMs": 2150,
+          "endMs": 2225
+        },
+        {
+          "word": "link.",
+          "startMs": 2240,
+          "endMs": 2510
+        }
+      ],
+      "durationSec": 2.86,
+      "clipSec": null,
+      "timingSource": "words.json"
+    }
+  },
+  "music": {
+    "M1": {
+      "src": "packs/synthetic/music/M1.mp3",
+      "durationSec": 28.839,
+      "label": "upbeat minimal hip-hop beat · 100 bpm"
+    },
+    "M2": {
+      "src": "packs/synthetic/music/M2.mp3",
+      "durationSec": 30.041,
+      "label": "bright electro-pop · 120 bpm"
+    }
+  },
+  "sfx": {
+    "whoosh": {
+      "src": "packs/synthetic/sfx/whoosh.wav",
+      "durationSec": 0.7
+    },
+    "pop": {
+      "src": "packs/synthetic/sfx/pop.wav",
+      "durationSec": 0.15
+    }
+  },
+  "provenance": {
+    "brand/packshot.png": {
+      "tool": "make-synthetic-pack (Node procedural)",
+      "model": "procedural bottle renderer (anti-aliased SDF profile)",
+      "prompt": "Studio product photo of a matte black stainless steel insulated water bottle with a brushed steel cap, minimalist, no text or logo on the bottle, soft top light, subtle reflections, centered, plain light grey background, 4k; background removed",
+      "created": "2026-10-04",
+      "kind": "image",
+      "slot": "BRAND"
+    },
+    "hooks/H1.mp4": {
+      "tool": "Windows SAPI (System.Speech, offline)",
+      "model": "Microsoft Zira Desktop",
+      "prompt": "",
+      "created": "2026-10-04",
+      "text": "Why is your water always warm by noon?",
+      "kind": "voice",
+      "slot": "H1"
+    },
+    "hooks/H1.mp3": {
+      "tool": "Windows SAPI (System.Speech, offline)",
+      "model": "Microsoft Zira Desktop",
+      "prompt": "",
+      "created": "2026-10-04",
+      "text": "Why is your water always warm by noon?",
+      "kind": "voice",
+      "slot": "H1"
+    },
+    "hooks/H2.mp4": {
+      "tool": "Windows SAPI (System.Speech, offline)",
+      "model": "Microsoft Zira Desktop",
+      "prompt": "",
+      "created": "2026-10-04",
+      "text": "Yesterday's ice. Still in here.",
+      "kind": "voice",
+      "slot": "H2"
+    },
+    "hooks/H2.mp3": {
+      "tool": "Windows SAPI (System.Speech, offline)",
+      "model": "Microsoft Zira Desktop",
+      "prompt": "",
+      "created": "2026-10-04",
+      "text": "Yesterday's ice. Still in here.",
+      "kind": "voice",
+      "slot": "H2"
+    },
+    "hooks/H3.mp4": {
+      "tool": "Windows SAPI (System.Speech, offline)",
+      "model": "Microsoft Zira Desktop",
+      "prompt": "",
+      "created": "2026-10-04",
+      "text": "I stopped buying bottled water. Here's why.",
+      "kind": "voice",
+      "slot": "H3"
+    },
+    "hooks/H3.mp3": {
+      "tool": "Windows SAPI (System.Speech, offline)",
+      "model": "Microsoft Zira Desktop",
+      "prompt": "",
+      "created": "2026-10-04",
+      "text": "I stopped buying bottled water. Here's why.",
+      "kind": "voice",
+      "slot": "H3"
+    },
+    "bodies/B1a.mp4": {
+      "tool": "make-synthetic-pack (Node procedural)",
+      "model": "procedural frames -> libx264 (Remotion bundled ffmpeg)",
+      "prompt": "The matte black bottle in a car cup holder, sunlight through the windshield, condensation droplets on the steel, slow push-in",
+      "created": "2026-10-04",
+      "kind": "video",
+      "slot": "B1"
+    },
+    "bodies/B1b.mp4": {
+      "tool": "make-synthetic-pack (Node procedural)",
+      "model": "procedural frames -> libx264 (Remotion bundled ffmpeg)",
+      "prompt": "Gym, a hand lifts the matte black bottle from a bench and drinks, shallow depth of field, cinematic light",
+      "created": "2026-10-04",
+      "kind": "video",
+      "slot": "B1"
+    },
+    "bodies/B1.mp3": {
+      "tool": "Windows SAPI (System.Speech, offline)",
+      "model": "Microsoft Zira Desktop",
+      "prompt": "",
+      "created": "2026-10-04",
+      "text": "Double steel walls keep drinks ice cold for twenty-four hours. Car, gym, beach. Still cold.",
+      "kind": "voice",
+      "slot": "B1"
+    },
+    "bodies/B2a.mp4": {
+      "tool": "make-synthetic-pack (Node procedural)",
+      "model": "procedural frames -> libx264 (Remotion bundled ffmpeg)",
+      "prompt": "Slow motion, the matte black bottle falls onto concrete and bounces, cap stays sealed, low angle, dramatic light",
+      "created": "2026-10-04",
+      "kind": "video",
+      "slot": "B2"
+    },
+    "bodies/B2b.mp4": {
+      "tool": "make-synthetic-pack (Node procedural)",
+      "model": "procedural frames -> libx264 (Remotion bundled ffmpeg)",
+      "prompt": "Golden hour hiking trail, a hand slides the matte black bottle into a backpack side pocket, handheld, warm light",
+      "created": "2026-10-04",
+      "kind": "video",
+      "slot": "B2"
+    },
+    "bodies/B2.mp3": {
+      "tool": "Windows SAPI (System.Speech, offline)",
+      "model": "Microsoft Zira Desktop",
+      "prompt": "",
+      "created": "2026-10-04",
+      "text": "Leak-proof lid. Fits every cup holder. Survives the drops. Built for real days.",
+      "kind": "voice",
+      "slot": "B2"
+    },
+    "ctas/C1.mp3": {
+      "tool": "Windows SAPI (System.Speech, offline)",
+      "model": "Microsoft Zira Desktop",
+      "prompt": "",
+      "created": "2026-10-04",
+      "text": "Get yours. Link in bio.",
+      "kind": "voice",
+      "slot": "C1"
+    },
+    "ctas/C2.mp3": {
+      "tool": "Windows SAPI (System.Speech, offline)",
+      "model": "Microsoft Zira Desktop",
+      "prompt": "",
+      "created": "2026-10-04",
+      "text": "Thirty-day trial. Tap the link.",
+      "kind": "voice",
+      "slot": "C2"
+    },
+    "music/M1.mp3": {
+      "tool": "make-synthetic-pack (Node procedural)",
+      "model": "procedural synth (kick/clap/hats/bass/pad)",
+      "prompt": "instrumental, upbeat minimal hip-hop beat, 100 bpm, punchy kick, no vocals, 30 seconds",
+      "created": "2026-10-04",
+      "kind": "music",
+      "slot": "MUSIC"
+    },
+    "music/M2.mp3": {
+      "tool": "make-synthetic-pack (Node procedural)",
+      "model": "procedural synth (kick/clap/hats/bass/pad)",
+      "prompt": "instrumental, bright electro-pop, 120 bpm, energetic, no vocals, 30 seconds",
+      "created": "2026-10-04",
+      "kind": "music",
+      "slot": "MUSIC"
+    },
+    "sfx/whoosh.wav": {
+      "tool": "make-synthetic-pack (Node procedural)",
+      "model": "procedural synth",
+      "prompt": "(optional)",
+      "created": "2026-10-04",
+      "kind": "sfx",
+      "slot": "SFX"
+    },
+    "sfx/pop.wav": {
+      "tool": "make-synthetic-pack (Node procedural)",
+      "model": "procedural synth",
+      "prompt": "(optional)",
+      "created": "2026-10-04",
+      "kind": "sfx",
+      "slot": "SFX"
+    }
+  }
+}

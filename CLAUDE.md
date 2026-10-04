@@ -2,7 +2,7 @@
 
 Model: Opus 5.5. Start: send `/autopilot REPO_URL=...` as the FIRST thing in a message (slash commands only run at the start). First action of every session: read `docs/RUNBOOK.md` fully, then `docs/STATUS.md`. Autopilot: `/autopilot REPO_URL=...`; `/status`, `/phase Pn`, `/pause`.
 Stack: Next 16, Remotion **4.0.532** (all `@remotion/*` exact), zod **4.5.4** exact, TypeScript 7 (`"types":["node"]`), tsx. Scripts in Node, no bashisms. Never `cd` out of the repo root.
-Commands: `npm run verify` (gate) | `hooks:test` | `doctor` | `dev` | `build`. Defined by the phases: `make:pack ingest build:variants render qa:stills previews ui:shots`.
+Commands: `npm run verify` (gate) | `hooks:test` | `doctor` | `dev` | `build` | `make:pack` | `ingest` | `build:variants` | `render` | `qa:stills` | `previews` | `ui:shots` | `docs:figures`.
 
 ## Rules
 1. **Autonomy:** you are the orchestrator. Delegate to the 8 subagents in `.claude/agents/` with complete briefs (goal, files, acceptance command, constraints, return format <= 12 lines). <= 3 in parallel, disjoint file ownership (RUNBOOK §4, §6).
@@ -14,4 +14,4 @@ Commands: `npm run verify` (gate) | `hooks:test` | `doctor` | `dev` | `build`. D
 7. **Remotion:** local assets via `staticFile()`; `Loop` for short clips; durations from the manifest; no network at render; node-only code never imported from `src/remotion/**` or `src/components/**`.
 8. Chrome download host may be blocked: our scripts read `REMOTION_BROWSER_EXECUTABLE` (our variable) / `--browser`.
 9. **Only you (orchestrator)** edit `package.json`/`package-lock.json` and run `npm install`; agents return dependency requests.
-10. **Green at every commit:** contract v2 (`src/contract.ts`, composition `AdVariant`, `data/variants/`) lives next to v1 until P6 removes v1.
+10. **Green at every commit.** v1 (live-AI path, `src/schema.ts`, `AIVideo`) was removed in P1.0 in one atomic commit (single orchestrator, no parallel v1 consumers). The only contract is `src/contract.ts` (composition `AdVariant`, `data/variants/`).
