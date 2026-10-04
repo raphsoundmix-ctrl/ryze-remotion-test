@@ -1,6 +1,6 @@
 # STATUS (orchestrator-maintained; the Stop-gate reads the RUN_STATE line)
 
-RUN_STATE: RUNNING
+RUN_STATE: DONE
 PARAMS: REPO_URL=https://github.com/raphsoundmix-ctrl/ryze-remotion-test VERCEL_PROJECT=ryze-video-engine BRAND=NORDA COMMIT_ASSETS=yes
 
 | Phase | Owner | State | Commit | Evidence |
@@ -15,7 +15,7 @@ PARAMS: REPO_URL=https://github.com/raphsoundmix-ctrl/ryze-remotion-test VERCEL_
 | P5 Playground UI | ui (interface-engineer) | DONE | 4e1a531 | build static; 0 network on select |
 | P6 integration QA | orchestrator | DONE | 9ed7717 | frames from real MP4s (contact sheet, filmstrip) |
 | P7 ship | orchestrator | DONE | 1432fcd | https://ryze-video-engine.vercel.app 200 |
-| P8 proof pack | orchestrator | IN REVIEW | | README, LOOM_SCRIPT, EMAIL; adversarial review running |
+| P8 proof pack | orchestrator | DONE | f8abd3e | README, LOOM_SCRIPT, EMAIL; adversarial review: 0 blockers, 5 majors fixed |
 
 Acceptance A1-A10 evidence:
 - A1 `npm run verify` → ALL PASSED (148 checks)
@@ -27,9 +27,10 @@ Acceptance A1-A10 evidence:
 - A7 stills (3 formats, 2 styles) + frames from rendered MP4s reviewed; UI shots 360/768/1280 reviewed
 - A8 staged-diff secret scan clean; .env.local / .vercel ignored; verify hygiene checks pass
 - A9 Vercel prod 200, title "NORDA Ad Engine — Remotion auto-montage prototype"; repo PUBLIC, branch main
-- A10 pending adversarial review
+- A10 adversarial review (code-reviewer-agent): VERDICT FIX → all 5 majors + 8 minors addressed in f8abd3e (claims relabelled extrapolated/threads, evidence committed, 1080p mezzanine, slot-id defaults)
 
 KNOWN_ISSUES:
+- Real asset pack not delivered yet (RUNBOOK B4: finished on synthetic). When it lands: `npm run ingest -- inbox/<pack> && npm run pipeline`, commit, push.
 - Pack is synthetic until the real asset pack lands in inbox/ (labeled SYNTHETIC in every frame and in the UI).
 - Silence-path word timings are an estimate on fluent speech (up to ~260 ms vs SAPI word events); real packs should ship words.json/srt.
 - Vercel project was linked before the app existed → preset "Other"; fixed by vercel.json `framework: nextjs`.
@@ -39,4 +40,5 @@ LOG (append-only, one line per event):
 - P0 baseline committed; harness (.claude/, hooks, doctor, hooks:test) added.
 - 2026-10-04 single-session run: v1 removed, engine + pack + ingest + template + UI built (agents: media, interface-engineer), 12/12 rendered.
 - 2026-10-05 pushed to GitHub main, Vercel project ryze-video-engine git-connected; preset fix redeployed; A6 on prod = 0.
+- 2026-10-05 review fixes f8abd3e pushed; mezzanine path tested end-to-end (7 clips 1080p → 1080x1920 render), synthetic restored.
 - 2026-10-05 throughput experiment --parallel 3 --concurrency 8: 121.2 s wall for 12 (~356/h).

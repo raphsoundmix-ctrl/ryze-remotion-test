@@ -27,7 +27,7 @@ scripts, UGC/AI footage, voice-overs and music into many short ads, and a batch 
 ## How it works
 
 ```mermaid
-flowchart LR
+flowchart TB
   P["Asset pack<br/>(video · voice · packshot · music + pack.csv)"] -->|npm run ingest| I["Ingest<br/>720×1280 H.264 · VO −16 LUFS<br/>lead/tail trim · word timings"]
   I --> S["data/slot-assets.json<br/>H1–H3 · B1–B2 · C1–C2 · M1–M2"]
   S -->|composeManifest — pure fn| V["Manifest v2 (zod)<br/>H2_B1_C2.json"]
@@ -74,6 +74,8 @@ npm run previews                           # 540p web previews + contact sheet
 npm run dev                                # Playground at http://localhost:3000
 npm run verify                             # tsc + 148 checks
 ```
+
+Real pack, one line: `npm run ingest -- inbox/ryze-asset-pack.zip && npm run pipeline` (variants → render → previews → figures → verify).
 
 No API keys, no network at render (fonts and media are local). The first render downloads Chrome Headless Shell;
 if that host is blocked, pass `--browser <chrome.exe>` or set `REMOTION_BROWSER_EXECUTABLE`.

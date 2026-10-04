@@ -18,7 +18,8 @@
     "verify": "tsc --noEmit && tsx scripts/verify.tsx",
     "doctor": "node scripts/doctor.mjs",
     "hooks:test": "node scripts/hooks-test.mjs",
-    "docs:figures": "tsx scripts/docs-figures.ts"
+    "docs:figures": "tsx scripts/docs-figures.ts",
+    "pipeline": "npm run build:variants && npm run render && npm run previews && npm run docs:figures && npm run verify"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.532",
