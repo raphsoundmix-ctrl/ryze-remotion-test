@@ -1,81 +1,132 @@
-# Ryze Video Engine (prototype)
+# NORDA Ad Engine · Remotion auto-montage
 
-Data-driven short-video engine: **one Remotion template + one JSON manifest = one video.**
-Idea → script (OpenRouter) → B-roll + voiceover with word timestamps (fal.ai) → `manifest.json` → Remotion → MP4.
+**Pre-generated AI assets in → 12 ad variants out → batch-rendered MP4s with measured metrics.**
+A working prototype for the *Video Editor (Remotion)* role: one data-driven Remotion template that turns
+scripts, UGC/AI footage, voice-overs and music into many short ads, and a batch pipeline that measures itself.
 
+**[▶ Live Playground](https://ryze-video-engine.vercel.app)** · [12 rendered previews](public/previews) · [render metrics (CSV)](public/manifest.csv) · [ingest report](docs/INGEST_REPORT.md)
+
+![Pipeline](docs/img/pipeline.svg)
+
+![12 variants: hook | body | CTA frames from every rendered MP4](docs/img/contact-sheet.png)
+<sub>Frames grabbed from the 12 rendered MP4s (`npm run previews`). Each triptych = hook · body · end card of one variant. Rows = hooks, columns = body × CTA.</sub>
+
+## What the role asks → what is here
+
+| The role says | Implemented | Proof |
+|---|---|---|
+| Remotion templates for UGC edits, AI formats, ad variations | One slot template `AdVariant` (hook → body → CTA), 2 caption styles, 3 formats (9:16, 4:5, 1:1) | [`src/remotion/AdVariant.tsx`](src/remotion/AdVariant.tsx), Playground |
+| Automate captions | Word-timed TikTok-style pages (`@remotion/captions`), one active word, safe zone y 55–68 % | [timeline](docs/img/timeline.svg) |
+| …hooks | On-screen hook 0–3 s + 3 interchangeable hook slots | [matrix](docs/img/matrix.svg) |
+| …music | Music bed ducked under every spoken word (6-frame ramps), 1 s fade-out | [timeline](docs/img/timeline.svg) |
+| …transitions | `@remotion/transitions` slide/fade; body cut on the word gap nearest 50 % with a punch-in | [filmstrip](docs/img/filmstrip.png) |
+| …batch rendering | Bundle once, render loop, per-variant preflight, failures isolated, CSV after every video | `npm run render`, [render-times](docs/img/render-times.svg) |
+| Ship 100+ finished videos a day | **12 videos in 188 s wall → ~229 videos/hour on one 24-core box** (measured, not estimated) | [`public/metrics.json`](public/metrics.json) |
+| Iterate templates on metrics, not looks | Variant id encodes the factors; CSV has `spend, ctr, hook_rate_3s, hold_rate` columns to join ad exports; full-factorial grid | [Iterate on metrics](#iterate-on-metrics-not-looks) |
+
+## How it works
+
+```mermaid
+flowchart LR
+  P["Asset pack<br/>(video · voice · packshot · music + pack.csv)"] -->|npm run ingest| I["Ingest<br/>720×1280 H.264 · VO −16 LUFS<br/>lead/tail trim · word timings"]
+  I --> S["data/slot-assets.json<br/>H1–H3 · B1–B2 · C1–C2 · M1–M2"]
+  S -->|composeManifest — pure fn| V["Manifest v2 (zod)<br/>H2_B1_C2.json"]
+  V --> PL["Browser Player<br/>instant preview, 0 network"]
+  V -->|npm run render| R["Batch renderer<br/>bundle once · preflight · try/catch"]
+  R --> O["out/*.mp4<br/>out/manifest.csv"]
+  O -->|join on variant_id| M["Ad metrics<br/>spend · CTR · hook rate · hold"]
+  M -.->|pick winners, swap one slot| S
 ```
- idea ──► OpenRouter (strict JSON, 3 scenes, zod-validated)
-              │
-              ▼
-   fal.ai ×3 scenes in parallel: Kling B-roll (9:16) + ElevenLabs TTS (word timestamps)
-              │
-              ▼
-        manifest.json  ◄── the only contract (src/schema.ts)
-         │          │
-         ▼          ▼
- @remotion/player   scripts/render-mvp.ts ──► out/*.mp4 + out/manifest.csv
- (Vercel dashboard,  (bundle once, render loop,
-  instant preview)    seconds/video recorded)
-```
 
-## Quick start (no API keys needed)
+**One contract** ([`src/contract.ts`](src/contract.ts), zod 4) is shared by ingest, Player, renderer and the verify gate.
+A video is a pure function of its manifest: duration, size and timing all come from data
+([`src/lib/timing.ts`](src/lib/timing.ts)), never from hard-coded frames.
+
+![Anatomy of one variant](docs/img/timeline.svg)
+
+## Measured
+
+![Render time per variant](docs/img/render-times.svg)
+
+| | |
+|---|---|
+| Output | 12 × MP4, 1080×1920, H.264 + AAC, 30 fps, 12.3–14.1 s each (manifest + ffprobe) |
+| Batch | 12/12 rendered, 0 skipped, 0 failed · 188.4 s wall + 2.7 s bundle |
+| Speed | avg **15.5 s per video** (min 14.7, max 16.4) · ~229 videos/hour |
+| Machine | Intel Core i9-12900K, 24 logical cores, 64 GB, Windows 11, Node 24 · concurrency 12, 1 video at a time |
+| Failure isolation | batch with 1 corrupt manifest + 1 deleted asset → 2 rendered, 2 skipped with reasons, exit 0 |
+| Gate | `npm run verify` → `ALL PASSED (147 checks)` |
+
+Numbers come from [`out/manifest.csv`](public/manifest.csv) / [`public/metrics.json`](public/metrics.json) of the run committed here.
+They are one machine, synthetic placeholder media, one configuration. Re-measure on yours with `npm run render`.
+
+## Run it
 
 ```bash
 npm install
-npm run seed        # 3 demo manifests -> data/manifests/
-npm run dev         # dashboard at http://localhost:3000 (presets + JSON editor + live Player)
-npm run render      # data/manifests/*.json -> out/*.mp4 + out/manifest.csv
-npm run studio      # optional: Remotion Studio
+npm run make:pack                          # synthetic pack -> inbox/synthetic-pack (offline, deterministic)
+npm run ingest -- inbox/synthetic-pack     # or: npm run ingest -- inbox/ryze-asset-pack.zip
+npm run build:variants                     # 3 x 2 x 2 = 12 manifests -> data/variants/
+npm run render                             # 12 MP4 -> out/ + out/manifest.csv + public/metrics.json
+npm run previews                           # 540p web previews + contact sheet
+npm run dev                                # Playground at http://localhost:3000
+npm run verify                             # tsc + 147 checks
 ```
 
-First `npm run render` downloads Chrome Headless Shell (Remotion does it automatically).
+No API keys, no network at render (fonts and media are local). The first render downloads Chrome Headless Shell;
+if that host is blocked, pass `--browser <chrome.exe>` or set `REMOTION_BROWSER_EXECUTABLE`.
+Useful flags: `render -- --only H2 --limit 4 --concurrency 8 --parallel 2`, `build:variants -- --style clean --music M2 --format 4x5`.
 
-## Live mode (real OpenRouter + fal.ai)
+## Bring your own assets
 
-```bash
-cp .env.example .env.local     # fill OPENROUTER_API_KEY and FAL_KEY
-npm run generate -- "idea one" "idea two" "idea three"   # -> data/manifests/*.json
-npm run render
+The engine is built against a pack contract, not against specific files. Drop a folder or zip into `inbox/` and ingest it:
+
+```
+ryze-asset-pack/
+├─ pack.csv                     file, slot, kind, tool, model, prompt, text, onScreen, created
+├─ brand/packshot.png           product on transparent background (end card hero)
+├─ hooks/   H1-3.mp4 + H1-3.mp3 (+ optional H1.words.json / H1.srt)
+├─ bodies/  B1a, B1b, B2a, B2b.mp4 + B1, B2.mp3   (2 clips per body; the cut is automatic)
+├─ ctas/    C1, C2.mp3 (+ optional C.mp4)
+└─ music/   M1, M2.mp3          sfx/ whoosh.wav, pop.wav (optional)
 ```
 
-Or use the dashboard: switch **MOCK → LIVE**, press **Generate**, watch the status log, download `manifest.json`.
-Commit live-generated manifests: `app/page.tsx` loads everything in `data/manifests/` as dashboard presets,
-so the deployed demo shows real AI footage instantly without spending credits.
+Ingest validates the tree against `pack.csv`, probes every file, rejects non-9:16 video / packshot without alpha /
+voice without audio, normalizes video (720×1280, ≤ 3 MB) and voice (0.25 s lead, 0.35 s tail, −16 LUFS),
+derives word timings (`words.json` → `.srt` → silence detection) and enforces slot limits (hook ≤ 4 s, body ≤ 9 s, CTA ≤ 3.5 s).
+Every file gets OK/FAIL with a reason in [`docs/INGEST_REPORT.md`](docs/INGEST_REPORT.md). Full spec: [`docs/ASSET_PACK.md`](docs/ASSET_PACK.md).
 
-**Safety:** live mode spends credits. On a production deploy it works only if `LIVE_ACCESS_CODE` is set
-(the dashboard then asks for it). Leave it unset to keep the public demo mock/preset-only.
+## Iterate on metrics, not looks
 
-## What is where
+* **Variant id = experiment design.** `H2_B1_C2` is hook 2 × body 1 × CTA 2; non-default axes append (`_clean_m2_f45`).
+* **Full factorial, one variable family per test.** The 12 core variants hold style, music and format constant, so
+  differences in hook rate or CTR can be attributed to hook / body / CTA main effects (each hook appears in 4 cells).
+* **The CSV is the join key.** `out/manifest.csv` ships empty `spend, ctr, hook_rate_3s, hold_rate` columns.
+  Paste the Meta/TikTok export on `variant_id`, keep the winning hook, swap one slot, re-run `build:variants`.
+* **Scale is rows, not code.** verify simulates 5 hooks × 4 bodies × 5 CTAs = 100 valid variants from the same functions.
+
+## Honest scope
+
+* **Assets:** the committed pack is **synthetic** (procedural clips with the slot id drawn in, offline Windows SAPI voice,
+  procedural music), labeled `SYNTHETIC` in every frame and in the UI. A pack of real pre-generated AI assets
+  (Kling/Higgsfield video, ElevenLabs voice, Suno music) goes through the same `ingest` with no code change.
+  The demo automates the **montage**; generation happens before it, offline.
+* **Word timings:** synthetic voice ships exact TTS word events. The silence-detection fallback is exact on
+  separated words (1 ms error in verify) but only an estimate on fluent speech; real packs should include `words.json`/`.srt`.
+* **Rendering is local.** Vercel hosts the static Playground (browser Player). Server-side MP4 rendering in serverless
+  functions is a poor fit (time/memory). The production path would be `@remotion/lambda` with the same manifests as
+  `inputProps`; it is **not** implemented here.
+* NORDA is a fictional brand; all copy is demo copy. Remotion is free for individuals and companies up to 3 people;
+  larger companies need a [Remotion Company License](https://www.remotion.dev/license). This repo's code is MIT.
+
+## Repo map
 
 | Path | Role |
 |---|---|
-| `src/schema.ts` | zod: LLM script, word timings, **Manifest** (inputProps), API request |
-| `src/lib/openrouter.ts` | strict JSON script, validated, 1 retry on invalid output |
-| `src/lib/fal.ts` | B-roll + TTS calls (model IDs overridable via env) |
-| `src/lib/words.ts` | normalises provider timestamps (several shapes) to scene-local ms; estimated fallback |
-| `src/lib/pipeline.ts` | orchestration, shared by the API route and the CLI |
-| `src/remotion/AIVideoTemplate.tsx` | template: B-roll per scene, hook 0-3s, word-synced captions, CTA, optional music |
-| `app/api/generate/route.ts` | streams status logs (NDJSON) + final manifest |
-| `scripts/render-mvp.ts` | bundle once → render loop → `out/manifest.csv` |
-
-Video length is data-driven: `calculateMetadata` sums the scene voiceover durations stored in the manifest.
-
-## Iterating on metrics, not looks
-
-`variantId` = `{idea}_{captionStyle}_{id}`. `out/manifest.csv` has empty `spend, ctr, hook_rate_3s, hold_rate` columns:
-paste Meta/TikTok exports joined on `variant_id`, then change one template variable (hook text, caption style, music) per variant.
-
-## Scaling: what is real, what is not
-
-- **Implemented and tested:** pipeline stages, manifest contract, dynamic duration, batch loop with timing.
-- **Not implemented:** cloud rendering. Rendering inside Vercel functions is a bad fit (time/memory limits).
-  The intended production path is `@remotion/lambda` (same manifests as `inputProps`, MP4s to S3). Only the local batch is built.
-- **Throughput:** measure with `npm run render` and read `render_sec` in `out/manifest.csv`.
-  Measured on my machine: _fill in after the first run_.
-
-## Notes
-
-- Preview is rendered in the browser (Player), MP4 is rendered by `scripts/render-mvp.ts`.
-- fal.ai documents the TTS `timestamps` field as untyped; the parser accepts several shapes and falls back to estimated timings (logged as WARN).
-- Remote asset URLs (fal.media) are used as-is; archive them yourself if you need long-term storage.
-- Remotion requires a company license for commercial use by companies; free for individuals.
+| `src/contract.ts` | zod manifest v2 + slot-assets schema + engine constants |
+| `src/lib/variants.ts` · `timing.ts` | pure, client-safe: compose / enumerate variants, frame math, ducking |
+| `src/lib/preflight.ts` | node-only: file exists, audio fits slot; never throws |
+| `src/lib/media/**` | node-only: bundled ffmpeg/ffprobe, VAD, loudness, PNG/WAV, synthetic generators |
+| `src/remotion/**` | `AdVariant` composition, captions, hook overlay, end card, theme, safe zones |
+| `app/**` · `src/components/**` | Next.js Playground (static, no API routes) |
+| `scripts/*` | make:pack · ingest · build:variants · render · previews · qa:stills · ui:shots · docs:figures · verify |
