@@ -17,11 +17,11 @@ scripts, UGC/AI footage, voice-overs and music into many short ads, and a batch 
 |---|---|---|
 | Remotion templates for UGC edits, AI formats, ad variations | One slot template `AdVariant` (hook → body → CTA), 2 caption styles, 3 formats (9:16, 4:5, 1:1) | [`src/remotion/AdVariant.tsx`](src/remotion/AdVariant.tsx), Playground |
 | Automate captions | Word-timed TikTok-style pages (`@remotion/captions`), one active word, safe zone y 55–68 % | [timeline](docs/img/timeline.svg) |
-| …hooks | On-screen hook 0–3 s + 3 interchangeable hook slots | [matrix](docs/img/matrix.svg) |
+| …hooks | On-screen hook text over the first ≤ 3 s + 3 interchangeable hook slots | [matrix](docs/img/matrix.svg) |
 | …music | Music bed ducked under every spoken word (6-frame ramps), 1 s fade-out | [timeline](docs/img/timeline.svg) |
 | …transitions | `@remotion/transitions` slide/fade; body cut on the word gap nearest 50 % with a punch-in | [filmstrip](docs/img/filmstrip.png) |
 | …batch rendering | Bundle once, render loop, per-variant preflight, failures isolated, CSV after every video | `npm run render`, [render-times](docs/img/render-times.svg) |
-| Ship 100+ finished videos a day | **12 videos in 188 s wall → ~229 videos/hour on one 24-core box** (measured, not estimated) | [`public/metrics.json`](public/metrics.json) |
+| Ship 100+ finished videos a day | **12 videos rendered in 188 s wall** (measured) → ~229/hour extrapolated on one 24-thread desktop CPU | [`public/metrics.json`](public/metrics.json) |
 | Iterate templates on metrics, not looks | Variant id encodes the factors; CSV has `spend, ctr, hook_rate_3s, hold_rate` columns to join ad exports; full-factorial grid | [Iterate on metrics](#iterate-on-metrics-not-looks) |
 
 ## How it works
@@ -31,7 +31,7 @@ flowchart LR
   P["Asset pack<br/>(video · voice · packshot · music + pack.csv)"] -->|npm run ingest| I["Ingest<br/>720×1280 H.264 · VO −16 LUFS<br/>lead/tail trim · word timings"]
   I --> S["data/slot-assets.json<br/>H1–H3 · B1–B2 · C1–C2 · M1–M2"]
   S -->|composeManifest — pure fn| V["Manifest v2 (zod)<br/>H2_B1_C2.json"]
-  V --> PL["Browser Player<br/>instant preview, 0 network"]
+  V --> PL["Browser Player<br/>instant preview, 0 network after cache"]
   V -->|npm run render| R["Batch renderer<br/>bundle once · preflight · try/catch"]
   R --> O["out/*.mp4<br/>out/manifest.csv"]
   O -->|join on variant_id| M["Ad metrics<br/>spend · CTR · hook rate · hold"]
@@ -52,13 +52,15 @@ A video is a pure function of its manifest: duration, size and timing all come f
 |---|---|
 | Output | 12 × MP4, 1080×1920, H.264 + AAC, 30 fps, 12.3–14.1 s each (manifest + ffprobe) |
 | Batch | 12/12 rendered, 0 skipped, 0 failed · 188.4 s wall + 2.7 s bundle |
-| Speed | avg **15.5 s per video** (min 14.7, max 16.4) · ~229 videos/hour |
-| Machine | Intel Core i9-12900K, 24 logical cores, 64 GB, Windows 11, Node 24 · concurrency 12, 1 video at a time |
-| Failure isolation | batch with 1 corrupt manifest + 1 deleted asset → 2 rendered, 2 skipped with reasons, exit 0 |
-| Gate | `npm run verify` → `ALL PASSED (147 checks)` |
+| Speed | avg **15.5 s per video** (min 14.7, max 16.4) · ~229 videos/hour extrapolated from this batch |
+| Machine | Intel Core i9-12900K (16 cores / 24 threads), 64 GB, Windows 11, Node 24 · concurrency 12, 1 video at a time |
+| Throughput knob | same 12 with `--parallel 3 --concurrency 8`: 121.2 s wall → ~356/hour extrapolated (each video slower, 29.2 s, but 3 at once). One run, same box: [`public/metrics-p3c8.json`](public/metrics-p3c8.json) |
+| Failure isolation | batch with 1 corrupt manifest + 1 deleted asset → 2 rendered, 2 skipped with reasons, exit 0: [`docs/evidence/failure-isolation.csv`](docs/evidence/failure-isolation.csv) (`--strict` makes any skip exit 1) |
+| Gate | `npm run verify` → `ALL PASSED (148 checks)` |
 
 Numbers come from [`out/manifest.csv`](public/manifest.csv) / [`public/metrics.json`](public/metrics.json) of the run committed here.
-They are one machine, synthetic placeholder media, one configuration. Re-measure on yours with `npm run render`.
+They are one machine, synthetic placeholder media, one configuration; videos/hour is extrapolated from a 12-video batch.
+`rss_mb` is the peak RSS of the Node orchestrator only (Chrome and ffmpeg excluded). Re-measure on yours with `npm run render`.
 
 ## Run it
 
@@ -70,7 +72,7 @@ npm run build:variants                     # 3 x 2 x 2 = 12 manifests -> data/va
 npm run render                             # 12 MP4 -> out/ + out/manifest.csv + public/metrics.json
 npm run previews                           # 540p web previews + contact sheet
 npm run dev                                # Playground at http://localhost:3000
-npm run verify                             # tsc + 147 checks
+npm run verify                             # tsc + 148 checks
 ```
 
 No API keys, no network at render (fonts and media are local). The first render downloads Chrome Headless Shell;
@@ -93,7 +95,8 @@ ryze-asset-pack/
 
 Ingest validates the tree against `pack.csv`, probes every file, rejects non-9:16 video / packshot without alpha /
 voice without audio, normalizes video (720×1280, ≤ 3 MB) and voice (0.25 s lead, 0.35 s tail, −16 LUFS),
-derives word timings (`words.json` → `.srt` → silence detection) and enforces slot limits (hook ≤ 4 s, body ≤ 9 s, CTA ≤ 3.5 s).
+derives word timings (`words.json` → `.srt` → silence detection) and enforces slot limits (hook ≤ 4 s, body ≤ 9 s, CTA ≤ 3.5 s, music ≥ 18 s).
+Source clips ≥ 1080×1920 also get a 1080p mezzanine (crf 18, `media-cache/`, not committed): the renderer uses it, the browser uses the 720p proxy.
 Every file gets OK/FAIL with a reason in [`docs/INGEST_REPORT.md`](docs/INGEST_REPORT.md). Full spec: [`docs/ASSET_PACK.md`](docs/ASSET_PACK.md).
 
 ## Iterate on metrics, not looks
@@ -111,11 +114,13 @@ Every file gets OK/FAIL with a reason in [`docs/INGEST_REPORT.md`](docs/INGEST_R
   procedural music), labeled `SYNTHETIC` in every frame and in the UI. A pack of real pre-generated AI assets
   (Kling/Higgsfield video, ElevenLabs voice, Suno music) goes through the same `ingest` with no code change.
   The demo automates the **montage**; generation happens before it, offline.
-* **Word timings:** synthetic voice ships exact TTS word events. The silence-detection fallback is exact on
+* **Word timings:** the synthetic voice ships TTS word-start events (word ends estimated from audio energy). The silence-detection fallback is exact on
   separated words (1 ms error in verify) but only an estimate on fluent speech; real packs should include `words.json`/`.srt`.
 * **Rendering is local.** Vercel hosts the static Playground (browser Player). Server-side MP4 rendering in serverless
   functions is a poor fit (time/memory). The production path would be `@remotion/lambda` with the same manifests as
   `inputProps`; it is **not** implemented here.
+* **Licenses of a real pack:** tool, model and date per file come from `pack.csv` and show in the Playground. Free tiers of
+  ElevenLabs and Suno are, to my knowledge, non-commercial; this is a non-commercial demo, check your plan before reuse.
 * NORDA is a fictional brand; all copy is demo copy. Remotion is free for individuals and companies up to 3 people;
   larger companies need a [Remotion Company License](https://www.remotion.dev/license). This repo's code is MIT.
 

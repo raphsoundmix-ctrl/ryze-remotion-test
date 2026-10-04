@@ -16,15 +16,16 @@ const SFX_VOLUME = 0.35;
 
 /** Visual track of one scene: one clip, or two clips cut at a word boundary (body). */
 const SceneVisual: React.FC<{ scene: Scene; frames: number }> = ({ scene, frames }) => {
-  if (scene.videoSrcs.length < 2) return <Clip src={scene.videoSrcs[0]} clipSec={scene.clipSec} frames={frames} />;
+  const clipLen = (i: number) => (scene.clipSecs ? scene.clipSecs[i] : scene.clipSec);
+  if (scene.videoSrcs.length < 2) return <Clip src={scene.videoSrcs[0]} clipSec={clipLen(0)} frames={frames} />;
   const cut = Math.round(msToFrame(bodyCutMs(scene)));
   return (
     <>
       <Sequence durationInFrames={cut}>
-        <Clip src={scene.videoSrcs[0]} clipSec={scene.clipSec} frames={cut} />
+        <Clip src={scene.videoSrcs[0]} clipSec={clipLen(0)} frames={cut} />
       </Sequence>
       <Sequence from={cut}>
-        <Clip src={scene.videoSrcs[1]} clipSec={scene.clipSec} frames={frames - cut} punchIn={PUNCH_IN_FRAMES} seed={1} />
+        <Clip src={scene.videoSrcs[1]} clipSec={clipLen(1)} frames={frames - cut} punchIn={PUNCH_IN_FRAMES} seed={1} />
       </Sequence>
     </>
   );

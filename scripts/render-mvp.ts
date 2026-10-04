@@ -16,6 +16,7 @@ import { renderMedia, selectComposition } from "@remotion/renderer";
 import { FPS } from "../src/contract";
 import { totalFrames } from "../src/lib/timing";
 import { preflight } from "../src/lib/preflight";
+import { renderPublicDir } from "../src/lib/media/render-public";
 import { probe, probeDuration } from "../src/lib/media/ffmpeg";
 
 const probeMedia = async (file: string) => ({ durationSec: probeDuration(await probe(file)) });
@@ -30,6 +31,17 @@ const HEADER = [
   "status", "reason", "spend", "ctr", "hook_rate_3s", "hold_rate",
 ] as const;
 type Row = Record<(typeof HEADER)[number], string>;
+/** Positive integer flag or a clear error ("--parallel abc" must not silently start zero workers). */
+const posInt = (name: string, fallback: number) => {
+  const raw = arg(name);
+  if (raw === undefined) return fallback;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1) {
+    console.error(`${name} must be a positive integer, got "${raw}"`);
+    process.exit(2);
+  }
+  return n;
+};
 const csvCell = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
 
 /** Tiny concurrency limiter (p-limit is ESM-only under tsx/CJS). */
@@ -51,8 +63,10 @@ async function main() {
   const only = arg("--only");
   const limit = arg("--limit") ? Number(arg("--limit")) : Infinity;
   const cores = os.cpus().length;
-  const concurrency = Math.min(cores, Number(arg("--concurrency") ?? Math.max(1, Math.floor(cores / 2))));
-  const parallel = Math.max(1, Number(arg("--parallel") ?? 1));
+  const parallel = posInt("--parallel", 1);
+  // Never oversubscribe: parallel renders x frames per render <= logical cores.
+  const concurrency = Math.max(1, Math.min(posInt("--concurrency", Math.max(1, Math.floor(cores / 2))), Math.floor(cores / parallel)));
+  const strict = process.argv.includes("--strict");
   const browserExecutable = arg("--browser") ?? process.env.REMOTION_BROWSER_EXECUTABLE ?? null;
   fs.mkdirSync(outDir, { recursive: true });
 
@@ -65,7 +79,9 @@ async function main() {
 
   console.log(`Bundling once… (${files.length} variants, concurrency ${concurrency}/video, parallel ${parallel}, ${cores} cores)`);
   const tBundle = Date.now();
-  const serveUrl = await bundle({ entryPoint: path.resolve("src/remotion/index.ts"), publicDir });
+  const render = renderPublicDir();
+  if (render.mezzanineClips) console.log(`Rendering from 1080p mezzanine (${render.mezzanineClips} clips) instead of the 720p web proxies.`);
+  const serveUrl = await bundle({ entryPoint: path.resolve("src/remotion/index.ts"), publicDir: render.dir });
   const bundleSec = (Date.now() - tBundle) / 1000;
 
   const rows: Row[] = [];
@@ -142,7 +158,8 @@ async function main() {
 
   console.log(`\n${ok.length} rendered, ${summary.skipped} skipped, ${summary.failed} failed in ${wallSec.toFixed(1)}s wall (+${bundleSec.toFixed(1)}s bundle).`);
   if (times.length) console.log(`avg ${summary.avgRenderSec}s/video, ~${summary.videosPerHour} videos/hour on this machine (${cores} cores, concurrency ${concurrency}, parallel ${parallel}). See ${path.relative(process.cwd(), outDir)}/manifest.csv`);
-  process.exit(ok.length ? 0 : 1);
+  // Default: exit 1 only if nothing rendered (one bad variant must not fail the batch). --strict: any skip/fail exits 1.
+  process.exit(ok.length === 0 || (strict && ok.length < rows.length) ? 1 : 0);
 }
 
 main().catch((e) => {

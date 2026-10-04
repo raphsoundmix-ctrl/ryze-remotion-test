@@ -31,12 +31,12 @@ export function MetricTiles({ m }: { m: Metrics }) {
       />
       <Tile label="Rendered" value={`${m.rendered}/${m.rows.length}`} note={notOk || "every manifest passed preflight"} />
       <Tile label="Avg render" value={fmtSec(m.avgRenderSec)} unit="/ video" note={`min ${fmtSec(m.minRenderSec)} · max ${fmtSec(m.maxRenderSec)}`} />
-      <Tile label="Machine" value={`${m.machine.cores} cores`} note={`${m.machine.cpu} · ${m.machine.ramGb} GB · ${m.machine.os} · Node ${m.machine.node}`} />
+      <Tile label="Machine" value={`${m.machine.cores} threads`} note={`${m.machine.cpu} · ${m.machine.ramGb} GB · ${m.machine.os} · Node ${m.machine.node}`} />
       <Tile
         label="Concurrency"
         value={`${m.settings.concurrency}×${m.settings.parallel}`}
         unit="frames × videos"
-        note={[codec, `peak RSS ${fmtInt(m.peakRssMb)} MB`].filter(Boolean).join(" · ")}
+        note={[codec, `peak Node RSS ${fmtInt(m.peakRssMb)} MB (excl. Chrome)`].filter(Boolean).join(" · ")}
       />
     </dl>
   );

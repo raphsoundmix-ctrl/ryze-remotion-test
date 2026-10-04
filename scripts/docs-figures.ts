@@ -36,7 +36,7 @@ function pipeline(assets: ReturnType<typeof SlotAssetsSchema.parse>, metrics: Me
     { t: "INGEST", big: "normalize", sub: ["720×1280 H.264 · −16 LUFS VO", "word timings · slot limits"] },
     { t: "SLOTS", big: `${ids.hooks.length}·${ids.bodies.length}·${ids.ctas.length}`, sub: ["hooks · bodies · CTAs", "data/slot-assets.json"] },
     { t: "VARIANTS", big: `${n}`, sub: [`${ids.hooks.length}×${ids.bodies.length}×${ids.ctas.length} factorial`, "pure fn → manifest.json"] },
-    { t: "RENDER", big: metrics ? `${metrics.rendered} MP4` : "MP4", sub: [metrics?.avgRenderSec ? `avg ${metrics.avgRenderSec.toFixed(1)} s / video` : "npm run render", metrics ? `${metrics.machine.cores}-core local box` : "local batch"] },
+    { t: "RENDER", big: metrics ? `${metrics.rendered} MP4` : "MP4", sub: [metrics?.avgRenderSec ? `avg ${metrics.avgRenderSec.toFixed(1)} s / video` : "npm run render", metrics ? `${metrics.machine.cores}-thread desktop` : "local batch"] },
   ];
   const w = 1200, bw = 200, gap = (w - 60 - bw * 5) / 4;
   let body = text(30, 44, "Pipeline: pre-generated AI assets → auto-montage → measured ad variants", { size: 20, weight: 800 });
@@ -55,7 +55,8 @@ function pipeline(assets: ReturnType<typeof SlotAssetsSchema.parse>, metrics: Me
 }
 
 function timeline(assets: ReturnType<typeof SlotAssetsSchema.parse>) {
-  const m = composeManifest(assets, "H1", "B1", "C1", { ...DEFAULT_AXES });
+  const ids = slotIds(assets);
+  const m = composeManifest(assets, ids.hooks[0], ids.bodies[0], ids.ctas[0], { ...DEFAULT_AXES });
   const total = totalFrames(m);
   const starts = sceneStarts(m);
   const W = 1200, L = 130, R = 30, px = (f: number) => L + ((W - L - R) * f) / total;
@@ -145,8 +146,8 @@ function renderTimes(metrics: Metrics) {
   const rows = metrics.rows.filter((r) => r.status === "ok");
   const W = 1200, H = 330, L = 60, B = 270, max = Math.max(...rows.map((r) => Number(r.render_sec))) * 1.15;
   const bw = (W - L - 40) / rows.length;
-  let b = text(30, 40, `Measured batch render: ${rows.length} videos, avg ${metrics.avgRenderSec?.toFixed(2)} s/video, ~${metrics.videosPerHour} videos/hour`, { size: 18, weight: 800 });
-  b += text(30, 62, `${metrics.machine.cpu} · ${metrics.machine.cores} cores · concurrency ${metrics.settings.concurrency} · parallel ${metrics.settings.parallel} · wall ${metrics.wallSec.toFixed(1)} s (from out/manifest.csv)`, { size: 12, fill: C.muted });
+  let b = text(30, 40, `Measured batch render: ${rows.length} videos, avg ${metrics.avgRenderSec?.toFixed(2)} s/video (~${metrics.videosPerHour}/hour extrapolated)`, { size: 18, weight: 800 });
+  b += text(30, 62, `${metrics.machine.cpu} · ${metrics.machine.cores} threads · concurrency ${metrics.settings.concurrency} · parallel ${metrics.settings.parallel} · wall ${metrics.wallSec.toFixed(1)} s (from out/manifest.csv)`, { size: 12, fill: C.muted });
   rows.forEach((r, i) => {
     const v = Number(r.render_sec), h = ((B - 90) * v) / max, x = L + i * bw + 6;
     b += `<rect x="${x}" y="${B - h}" width="${bw - 12}" height="${h}" rx="5" fill="${C.ice}" opacity="0.85"/>`;

@@ -69,6 +69,9 @@
       ],
       "durationSec": 3.282,
       "clipSec": 5,
+      "clipSecs": [
+        5
+      ],
       "timingSource": "words.json"
     },
     {
@@ -159,6 +162,10 @@
       ],
       "durationSec": 7.456,
       "clipSec": 5,
+      "clipSecs": [
+        5,
+        5
+      ],
       "timingSource": "words.json"
     },
     {
@@ -198,6 +205,9 @@
       ],
       "durationSec": 2.605,
       "clipSec": null,
+      "clipSecs": [
+        null
+      ],
       "timingSource": "words.json"
     }
   ]

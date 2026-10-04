@@ -1,0 +1,5 @@
+variant_id,hook_id,body_id,cta_id,style,music_id,format,file,duration_sec,render_sec,rss_mb,status,reason,spend,ctr,hook_rate_3s,hold_rate
+H1_B1_C1,H1,B1,C1,hormozi,M1,9x16,C:/Users/raphs/AppData/Local/Temp/claude/E--Remotion-TEST/33adb22b-58d3-4bc4-8340-59c905a55989/scratchpad/a5/out/H1_B1_C1.mp4,13.00,16.16,589,ok,,,,,
+H1_B1_C2,,,,,,,,,,,skipped,invalid JSON: Unterminated string in JSON at position 200 (line 11 column 7),,,,
+H2_B2_C2,H2,B2,C2,hormozi,M1,9x16,C:/Users/raphs/AppData/Local/Temp/claude/E--Remotion-TEST/33adb22b-58d3-4bc4-8340-59c905a55989/scratchpad/a5/out/H2_B2_C2.mp4,13.13,16.01,589,ok,,,,,
+H3_B1_C1,,,,,,,,,,,skipped,missing file: public/packs/synthetic/bodies/DELETED.mp4,,,,

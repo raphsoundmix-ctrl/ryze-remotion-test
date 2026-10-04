@@ -207,11 +207,15 @@ export async function processVoice(opts: {
   return { durationSec, words: final, timingSource, truthMaxErrMs, silenceVsJsonMaxErrMs, detail: [...parts, ...notes].join("; ") };
 }
 
+const MIN_MUSIC_SEC = 18;
+
 /** Music bed: loudnorm I=-20, ≤ 40 s, mp3 128k 44.1k (stereo kept). */
 export async function processMusic(input: string, output: string): Promise<{ durationSec: number; detail: string }> {
   const p = await probe(input);
   const a = audioStream(p);
   if (!a) throw new IngestError("no audio stream");
+  // The bed is not looped; the longest possible ad is ~17.5 s (4 + 9 + 3.5 + 1 s hold - transitions).
+  if (probeDuration(p) < MIN_MUSIC_SEC) throw new IngestError(`music ${probeDuration(p).toFixed(1)} s < ${MIN_MUSIC_SEC} s minimum`);
   const ch = Math.min(2, a.channels ?? 2);
   await ffmpeg(["-v", "error", "-i", input, "-vn", "-t", "40", "-af", "loudnorm=I=-20:TP=-1.5:LRA=11,aresample=44100", "-ar", "44100", "-ac", String(ch), "-c:a", "libmp3lame", "-b:a", "128k", output]);
   const durationSec = r3(probeDuration(await probe(output)));

@@ -3,6 +3,7 @@
  * Node-only.
  */
 import fs from "node:fs";
+import path from "node:path";
 import { decodePng } from "./png";
 import { displaySize, ffmpeg, probe, probeDuration, videoStream } from "./ffmpeg";
 import { IngestError } from "./ingest-audio";
@@ -13,6 +14,9 @@ const ASPECT_TOLERANCE = 0.02;
 const MAX_CLIP_BYTES = 3 * 1024 * 1024;
 const mb = (bytes: number) => `${(bytes / 1048576).toFixed(2)} MB`;
 const COVER = `scale=${TARGET_W}:${TARGET_H}:force_original_aspect_ratio=increase,crop=${TARGET_W}:${TARGET_H}`;
+const MEZZ_W = 1080;
+const MEZZ_H = 1920;
+const MEZZ_COVER = `scale=${MEZZ_W}:${MEZZ_H}:force_original_aspect_ratio=increase,crop=${MEZZ_W}:${MEZZ_H}`;
 
 function checkAspect(w: number, h: number): void {
   if (!w || !h) throw new IngestError("no video dimensions");
@@ -21,7 +25,7 @@ function checkAspect(w: number, h: number): void {
 }
 
 /** Video clip → 720×1280 libx264 crf 24 (retry crf 28 above 3 MB), yuv420p, 30 fps, no audio, ≤ 5.5 s, faststart. */
-export async function processVideo(input: string, output: string): Promise<{ clipSec: number; detail: string }> {
+export async function processVideo(input: string, output: string, mezzOutput?: string): Promise<{ clipSec: number; detail: string }> {
   const p = await probe(input);
   const v = videoStream(p);
   if (!v) throw new IngestError("no video stream");
@@ -44,6 +48,15 @@ export async function processVideo(input: string, output: string): Promise<{ cli
   const clipSec = Math.round(probeDuration(out) * 1000) / 1000;
   if (!ov || ov.width !== TARGET_W || ov.height !== TARGET_H || !(clipSec > 0)) throw new IngestError("transcode produced an invalid clip");
   if (fs.statSync(output).size > MAX_CLIP_BYTES) notes.push(`above 3 MB even at crf 28`);
+  if (mezzOutput && width >= MEZZ_W && height >= MEZZ_H) {
+    // Render-quality copy (outside public/): the final 1080x1920 ad is not upscaled from the 720p proxy.
+    fs.mkdirSync(path.dirname(mezzOutput), { recursive: true });
+    await ffmpeg([
+      "-v", "error", "-i", input, "-an", "-sn", "-dn", "-vf", MEZZ_COVER, "-r", "30",
+      "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-aspect", "9:16", "-t", "5.5", mezzOutput,
+    ]);
+    notes.push(`1080p mezzanine ${mb(fs.statSync(mezzOutput).size)} for render`);
+  }
   return {
     clipSec,
     detail: [`${width}x${height} ${probeDuration(p).toFixed(2)} s ${mb(fs.statSync(input).size)} → ${TARGET_W}x${TARGET_H} ${clipSec.toFixed(2)} s ${mb(fs.statSync(output).size)} crf ${crf}`, ...notes].join("; "),

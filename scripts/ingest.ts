@@ -66,7 +66,8 @@ function slotText(byStem: Map<string, CsvRow>, slot: string, voiceFile: string):
   const row = rowFor(byStem, voiceFile);
   const canon = CANONICAL_TEXTS[slot];
   const text = row?.text?.trim() || canon.text;
-  const onScreen = row?.onScreen?.trim() || (canon.slot === "hook" ? canon.onScreen : undefined);
+  // Canonical on-screen text only when the VO text is canonical too, so the overlay never contradicts the voice.
+  const onScreen = row?.onScreen?.trim() || (canon.slot === "hook" && !row?.text?.trim() ? canon.onScreen : undefined);
   return { text, onScreen: onScreen || undefined, note: row?.text?.trim() ? undefined : "text from ASSET_PACK §3 (pack.csv has none)" };
 }
 
@@ -103,7 +104,7 @@ function renameWithRetry(from: string, to: string): void {
   }
 }
 
-async function processAll(root: string, scan: TreeScan, byStem: Map<string, CsvRow>, staging: string): Promise<Map<string, Done>> {
+async function processAll(root: string, scan: TreeScan, byStem: Map<string, CsvRow>, staging: string, mezzStaging: string): Promise<Map<string, Done>> {
   const done = new Map<string, Done>();
   const tasks = PACK_TREE.filter((e) => e.kind !== "csv" && scan.found.has(e.file));
   await pool(tasks, CONCURRENCY, async (e) => {
@@ -115,7 +116,7 @@ async function processAll(root: string, scan: TreeScan, byStem: Map<string, CsvR
     try {
       if (e.kind === "video") {
         const isImage = IMAGE_CLIP_EXT.includes(path.extname(srcRel).toLowerCase());
-        const r = isImage ? await processImageClip(input, output) : await processVideo(input, output);
+        const r = isImage ? await processImageClip(input, output) : await processVideo(input, output, path.join(mezzStaging, outRel));
         done.set(e.file, { status: "OK", detail: r.detail, outRel, clipSec: r.clipSec });
       } else if (e.kind === "voice") {
         const slot = e.slot;
@@ -180,6 +181,7 @@ function buildSlots(done: Map<string, Done>, byStem: Map<string, CsvRow>, src: (
       videoSrcs: vis.map((d) => src(d.outRel as string)), audioSrc: src(v.outRel), words: v.voice.words,
       durationSec: v.voice.durationSec,
       clipSec: clipSecs.every((c): c is number => typeof c === "number") ? Math.min(...clipSecs) : null,
+      clipSecs,
       timingSource: v.voice.timingSource,
     };
     const problems: string[] = [];
@@ -272,15 +274,21 @@ function viabilityProblems(assets: SlotAssets, sizes: { file: string; bytes: num
 }
 
 /** Swap staging → public/packs/<id>, drop other packs (unless keepOthers), write data/slot-assets.json. */
-function publish(packsDir: string, staging: string, packId: string, keepOthers: boolean, assets: SlotAssets): void {
-  const live = path.join(packsDir, packId);
+function swapDir(parent: string, staging: string, packId: string, keepOthers: boolean): void {
+  const live = path.join(parent, packId);
   fs.rmSync(live, { recursive: true, force: true });
-  renameWithRetry(staging, live);
-  if (!keepOthers) {
-    for (const d of fs.readdirSync(packsDir)) {
-      if (d !== packId && fs.statSync(path.join(packsDir, d)).isDirectory()) fs.rmSync(path.join(packsDir, d), { recursive: true, force: true });
+  if (fs.existsSync(staging)) renameWithRetry(staging, live);
+  if (!keepOthers && fs.existsSync(parent)) {
+    for (const d of fs.readdirSync(parent)) {
+      if (d !== packId && fs.statSync(path.join(parent, d)).isDirectory()) fs.rmSync(path.join(parent, d), { recursive: true, force: true });
     }
   }
+}
+
+/** Swap staging → public/packs/<id> (+ media-cache/<id> mezzanine), drop other packs (unless keepOthers), write data/slot-assets.json. */
+function publish(packsDir: string, staging: string, mezzStaging: string, packId: string, keepOthers: boolean, assets: SlotAssets): void {
+  swapDir(packsDir, staging, packId, keepOthers);
+  swapDir(path.dirname(mezzStaging), mezzStaging, packId, keepOthers);
   const out = path.join(process.cwd(), "data", "slot-assets.json");
   fs.mkdirSync(path.dirname(out), { recursive: true });
   fs.writeFileSync(out, JSON.stringify(SlotAssetsSchema.parse(assets), null, 2) + "\n");
@@ -293,6 +301,7 @@ async function main() {
   const cwd = process.cwd();
   const packsDir = path.join(cwd, "public", "packs");
   let staging = "";
+  let mezzStaging = "";
   try {
     const scan = scanTree(pack.root);
     const { rows: csvRows, byStem } = readPackCsv(pack.root, scan);
@@ -305,8 +314,10 @@ async function main() {
     for (const d of fs.readdirSync(packsDir)) if (d.startsWith(".staging-")) fs.rmSync(path.join(packsDir, d), { recursive: true, force: true });
     staging = path.join(packsDir, `.staging-${packId}`);
     fs.mkdirSync(staging, { recursive: true });
+    mezzStaging = path.join(cwd, "media-cache", `.staging-${packId}`);
+    fs.rmSync(mezzStaging, { recursive: true, force: true });
 
-    const done = await processAll(pack.root, scan, byStem, staging);
+    const done = await processAll(pack.root, scan, byStem, staging, mezzStaging);
     const built = buildSlots(done, byStem, (rel) => `packs/${packId}/${rel}`);
     const files = fileRows(scan, done, csvRows.length, provenance);
     const assets = assembleAssets(ctx, done, built.slots);
@@ -325,8 +336,9 @@ async function main() {
     });
 
     if (!opts.dryRun && viable) {
-      publish(packsDir, staging, packId, opts.keepOthers, assets);
+      publish(packsDir, staging, mezzStaging, packId, opts.keepOthers, assets);
       staging = "";
+      mezzStaging = "";
     }
     const reportPath = opts.report ? path.resolve(opts.report) : opts.dryRun ? "" : path.join(cwd, "docs", "INGEST_REPORT.md");
     if (reportPath) {
@@ -344,6 +356,7 @@ async function main() {
     if (!viable) process.exitCode = 1;
   } finally {
     if (staging) fs.rmSync(staging, { recursive: true, force: true });
+    if (mezzStaging) fs.rmSync(mezzStaging, { recursive: true, force: true });
     pack.cleanup();
   }
 }

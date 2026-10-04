@@ -62,6 +62,9 @@
       ],
       "durationSec": 2.414,
       "clipSec": 5,
+      "clipSecs": [
+        5
+      ],
       "timingSource": "words.json"
     },
     "H2": {
@@ -102,6 +105,9 @@
       ],
       "durationSec": 2.986,
       "clipSec": 5,
+      "clipSecs": [
+        5
+      ],
       "timingSource": "words.json"
     },
     "H3": {
@@ -152,6 +158,9 @@
       ],
       "durationSec": 3.282,
       "clipSec": 5,
+      "clipSecs": [
+        5
+      ],
       "timingSource": "words.json"
     },
     "B1": {
@@ -242,6 +251,10 @@
       ],
       "durationSec": 7.456,
       "clipSec": 5,
+      "clipSecs": [
+        5,
+        5
+      ],
       "timingSource": "words.json"
     },
     "B2": {
@@ -322,6 +335,10 @@
       ],
       "durationSec": 6.767,
       "clipSec": 5,
+      "clipSecs": [
+        5,
+        5
+      ],
       "timingSource": "words.json"
     },
     "C1": {
@@ -361,6 +378,9 @@
       ],
       "durationSec": 2.605,
       "clipSec": null,
+      "clipSecs": [
+        null
+      ],
       "timingSource": "words.json"
     },
     "C2": {
@@ -400,6 +420,9 @@
       ],
       "durationSec": 2.86,
       "clipSec": null,
+      "clipSecs": [
+        null
+      ],
       "timingSource": "words.json"
     }
   },
@@ -435,12 +458,11 @@
       "slot": "BRAND"
     },
     "hooks/H1.mp4": {
-      "tool": "Windows SAPI (System.Speech, offline)",
-      "model": "Microsoft Zira Desktop",
-      "prompt": "",
+      "tool": "make-synthetic-pack (Node procedural)",
+      "model": "procedural frames -> libx264 (Remotion bundled ffmpeg)",
+      "prompt": "Vertical 9:16 handheld UGC phone footage inside a hot car at noon, a hand picks up a flimsy plastic water bottle from the dashboard, harsh sunlight, visible heat haze, slight camera shake",
       "created": "2026-10-04",
-      "text": "Why is your water always warm by noon?",
-      "kind": "voice",
+      "kind": "video",
       "slot": "H1"
     },
     "hooks/H1.mp3": {
@@ -453,12 +475,11 @@
       "slot": "H1"
     },
     "hooks/H2.mp4": {
-      "tool": "Windows SAPI (System.Speech, offline)",
-      "model": "Microsoft Zira Desktop",
-      "prompt": "",
+      "tool": "make-synthetic-pack (Node procedural)",
+      "model": "procedural frames -> libx264 (Remotion bundled ffmpeg)",
+      "prompt": "Macro close-up, a hand unscrews the brushed steel cap of the matte black bottle, ice cubes visible inside, cold vapor rising, dark studio, slow motion",
       "created": "2026-10-04",
-      "text": "Yesterday's ice. Still in here.",
-      "kind": "voice",
+      "kind": "video",
       "slot": "H2"
     },
     "hooks/H2.mp3": {
@@ -471,12 +492,11 @@
       "slot": "H2"
     },
     "hooks/H3.mp4": {
-      "tool": "Windows SAPI (System.Speech, offline)",
-      "model": "Microsoft Zira Desktop",
-      "prompt": "",
+      "tool": "make-synthetic-pack (Node procedural)",
+      "model": "procedural frames -> libx264 (Remotion bundled ffmpeg)",
+      "prompt": "Vertical selfie-style UGC, a young woman in a bright kitchen holds the matte black bottle up to the camera and smiles, natural window light, handheld",
       "created": "2026-10-04",
-      "text": "I stopped buying bottled water. Here's why.",
-      "kind": "voice",
+      "kind": "video",
       "slot": "H3"
     },
     "hooks/H3.mp3": {

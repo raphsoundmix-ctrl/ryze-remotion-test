@@ -21,7 +21,8 @@ export const SceneSchema = z.object({
   audioSrc: z.string().min(1),
   words: z.array(WordSchema).min(1),
   durationSec: z.number().positive(), // probed: LEAD + VO + TAIL
-  clipSec: z.number().positive().nullable().optional(), // probed length of the video clips (null = still image)
+  clipSec: z.number().positive().nullable().optional(), // shortest probed clip length (null = a still image is involved)
+  clipSecs: z.array(z.number().positive().nullable()).optional(), // probed length per videoSrcs entry (null = still image)
   timingSource: z.enum(TIMING_SOURCES).optional(),
 });
 export type Scene = z.infer<typeof SceneSchema>;

@@ -10,7 +10,8 @@ import { bundle } from "@remotion/bundler";
 import { renderStill, selectComposition } from "@remotion/renderer";
 import { FORMATS, SlotAssetsSchema, type Format, type Style } from "../src/contract";
 import { bodyCutMs, msToFrame, sceneStarts, totalFrames } from "../src/lib/timing";
-import { composeManifest } from "../src/lib/variants";
+import { composeManifest, slotIds } from "../src/lib/variants";
+import { renderPublicDir } from "../src/lib/media/render-public";
 
 const arg = (name: string, fallback: string) => {
   const i = process.argv.indexOf(name);
@@ -21,10 +22,11 @@ async function main() {
   const assets = SlotAssetsSchema.parse(JSON.parse(fs.readFileSync("data/slot-assets.json", "utf8")));
   const browserExecutable = arg("--browser", process.env.REMOTION_BROWSER_EXECUTABLE ?? "") || null;
   const formats = (arg("--formats", Object.keys(FORMATS).join(",")).split(",")) as Format[];
-  const serveUrl = await bundle({ entryPoint: path.resolve("src/remotion/index.ts"), publicDir: path.resolve("public") });
+  const serveUrl = await bundle({ entryPoint: path.resolve("src/remotion/index.ts"), publicDir: renderPublicDir().dir });
 
+  const ids = slotIds(assets);
   for (const format of formats) {
-    const m = composeManifest(assets, arg("--hook", "H1"), arg("--body", "B1"), arg("--cta", "C1"), {
+    const m = composeManifest(assets, arg("--hook", ids.hooks[0]), arg("--body", ids.bodies[0]), arg("--cta", ids.ctas[0]), {
       style: arg("--style", "hormozi") as Style, format, musicId: "M1",
     });
     const starts = sceneStarts(m);
